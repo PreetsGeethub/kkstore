@@ -27,11 +27,11 @@ model User {
   orders        Order[]
 
   firstName String
-  lastName String
-  email    String   @unique
-  password String?
-  phone    String   @unique
-  role     UserRole @default(CUSTOMER)
+  lastName  String
+  email     String   @unique
+  password  String?
+  phone     String   @unique
+  role      UserRole @default(CUSTOMER)
 
   isVerified Boolean @default(false)
   isActive   Boolean @default(true)

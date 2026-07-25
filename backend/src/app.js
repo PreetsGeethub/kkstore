@@ -2,7 +2,8 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
-
+import errorHandler from "./middleware/error.middleware.js";
+import authRoutes from "./routes/auth.routes.js";
 const app = express();
 
 app.use(express.json());
@@ -17,4 +18,7 @@ app.get("/", (req, res) => {
   });
 });
 
+
+app.use("/api/v1/auth",authRoutes);
+app.use(errorHandler);
 export default app;

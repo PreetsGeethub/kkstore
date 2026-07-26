@@ -32,6 +32,7 @@ model User {
   password  String?
   phone     String   @unique
   role      UserRole @default(CUSTOMER)
+  refreshToken String?
 
   isVerified Boolean @default(false)
   isActive   Boolean @default(true)

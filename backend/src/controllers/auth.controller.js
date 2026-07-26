@@ -1,6 +1,10 @@
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiResponse from "../utils/ApiResponse.js";
-import { registerUser } from "../services/auth.service.js";
+import { registerUser, loginUser } from "../services/auth.service.js";
+import {
+    accessTokenOptions,
+    refreshTokenOptions,
+} from "../utils/cookieOptions.js";
 
 export const register = asyncHandler(async (req, res) => {
     const userData = req.body;
@@ -11,6 +15,23 @@ export const register = asyncHandler(async (req, res) => {
         new ApiResponse(
             201,
             "User registered successfully.",
+            user
+        )
+    );
+});
+
+export const login = asyncHandler(async (req, res) => {
+    // const {indentifier, password} = req.body;
+    const { user, accessToken, refreshToken }  =  await loginUser(req.body);
+      
+
+    return res
+    .cookie("accessToken",accessToken,accessTokenOptions)
+    .cookie("refreshToken",refreshToken,refreshTokenOptions)
+    .status(200).json(
+        new  ApiResponse(
+            200,
+            "User logged in successfully.",
             user
         )
     );

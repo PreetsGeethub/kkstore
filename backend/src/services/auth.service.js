@@ -2,6 +2,11 @@ import prisma from "../config/prisma.js";
 import ApiError from "../utils/ApiError.js";
 import bcrypt from "bcrypt";
 import { env } from "../config/env.js";
+import {
+    generateAccessToken,
+    generateRefreshToken,
+  } from "../utils/token.js";
+import { da } from "zod/v4/locales";
 
 // const existingUser = await prisma.user.findUnique({
 //     where: {
@@ -61,3 +66,53 @@ export const registerUser = async (userData) => {
 
     return user;
 };
+
+
+export const loginUser = async (data) =>{
+    const {identifier, password} = data;
+
+    const user = await prisma.user.findFirst({
+        where: {
+            OR: [
+                { email: identifier },
+                { phone: identifier }
+            ]
+        }
+    });
+
+    if(!user) {
+        throw new ApiError(401, "Invalid email/phone or password.");
+    }
+    const isPasswordValid  = await bcrypt.compare(password, user.password);
+    if(!isPasswordValid ) {
+        throw new ApiError(401, "Invalid email/phone or password.");
+    }
+
+    
+    const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
+
+    await prisma.user.update({
+        where: {
+            id: user.id
+        },
+        data: {
+            refreshToken
+        }
+    })
+
+    const safeUser = {
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+    };
+    return {
+        user: safeUser,
+        accessToken,
+        refreshToken,
+    };
+
+}

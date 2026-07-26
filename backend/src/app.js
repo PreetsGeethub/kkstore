@@ -4,12 +4,14 @@ import helmet from "helmet";
 import morgan from "morgan";
 import errorHandler from "./middleware/error.middleware.js";
 import authRoutes from "./routes/auth.routes.js";
+import cookieParser from "cookie-parser";
 const app = express();
 
 app.use(express.json());
 app.use(cors());
 app.use(helmet());
 app.use(morgan("dev"));
+app.use(cookieParser());
 
 app.get("/", (req, res) => {
   res.json({

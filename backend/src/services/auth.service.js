@@ -116,3 +116,23 @@ export const loginUser = async (data) =>{
     };
 
 }
+
+
+export const logoutUser = async (id) =>{
+    await prisma.user.update({
+        where : {
+            id,
+        },
+        data:{
+            refreshToken : null,
+        }
+    })
+
+    // if(!user){
+    //     throw new ApiError(
+    //         401,
+    //         "User Doesnt Exist"
+    //     )
+    // } // update autmatially throws error if it doesnt exist
+
+}

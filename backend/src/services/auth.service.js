@@ -7,6 +7,7 @@ import {
     generateRefreshToken,
   } from "../utils/token.js";
 import { da } from "zod/v4/locales";
+import jwt from "jsonwebtoken";
 
 // const existingUser = await prisma.user.findUnique({
 //     where: {
@@ -136,3 +137,75 @@ export const logoutUser = async (id) =>{
     // } // update autmatially throws error if it doesnt exist
 
 }
+
+export const refreshUserToken = async (refreshToken) => {
+    // 1. Check if refresh token exists
+    if (!refreshToken) {
+        throw new ApiError(
+            401,
+            "Refresh token is missing."
+        );
+    }
+
+    // 2. Verify refresh token
+    let decoded;
+
+    try {
+        decoded = jwt.verify(
+            refreshToken,
+            env.JWT_REFRESH_SECRET
+        );
+    } catch (error) {
+        throw new ApiError(
+            401,
+            "Invalid or expired refresh token."
+        );
+    }
+
+    // 3. Find user
+    const dbUser = await prisma.user.findUnique({
+        where: {
+            id: decoded.userId,
+        },
+        select: {
+            id: true,
+            role: true,
+            refreshToken: true,
+        },
+    });
+
+    if (!dbUser) {
+        throw new ApiError(
+            401,
+            "User does not exist."
+        );
+    }
+
+    // 4. Compare refresh tokens
+    if (refreshToken !== dbUser.refreshToken) {
+        throw new ApiError(
+            401,
+            "Invalid refresh token."
+        );
+    }
+
+    // 5. Generate new tokens
+    const newAccessToken = generateAccessToken(dbUser);
+    const newRefreshToken = generateRefreshToken(dbUser);
+
+    // 6. Save new refresh token
+    await prisma.user.update({
+        where: {
+            id: dbUser.id,
+        },
+        data: {
+            refreshToken: newRefreshToken,
+        },
+    });
+
+    // 7. Return tokens
+    return {
+        accessToken: newAccessToken,
+        refreshToken: newRefreshToken,
+    };
+};

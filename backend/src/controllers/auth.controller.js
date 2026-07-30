@@ -7,7 +7,7 @@ import {
 } from "../utils/cookieOptions.js";
 
 export const register = asyncHandler(async (req, res) => {
-    const userData = req.body;
+    const userData = req.validated.body;
 
     const user = await registerUser(userData);
 
@@ -22,7 +22,7 @@ export const register = asyncHandler(async (req, res) => {
 
 export const login = asyncHandler(async (req, res) => {
     // const {indentifier, password} = req.body;
-    const { user, accessToken, refreshToken }  =  await loginUser(req.body);
+    const { user, accessToken, refreshToken }  =  await loginUser(req.validated.body);
       
 
     return res

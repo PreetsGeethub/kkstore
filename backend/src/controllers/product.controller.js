@@ -3,7 +3,7 @@ import ApiResponse from "../utils/ApiResponse.js";
 import asyncHandler from "../utils/asyncHandler.js";
 
 export const create = asyncHandler(async (req, res) => {
-    const product = await createProduct(req.body);
+    const product = await createProduct(req.validated.body);
 
     res.status(201).json(
         new ApiResponse(

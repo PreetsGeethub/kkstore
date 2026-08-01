@@ -66,7 +66,7 @@ export const getCategories = async (data) => {
     // const totalCategories = await prisma.category.count({
     //     where,
     // })
-    console.log(where);
+  
     const [categories, totalCategories] = await Promise.all([
         prisma.category.findMany({
             where,
@@ -117,41 +117,38 @@ export const getCategoryById = async (id) => {
 };
 
 export const updateCategory = async (data, id) => {
-
     const existingCategory = await prisma.category.findUnique({
-        where: {
-            id,
-        }
-    })
+        where: { id },
+    });
+
     if (!existingCategory) {
-        throw new ApiError(
-            404,
-            "Category does not  exist",
-        )
+        throw new ApiError(404, "Category does not exist");
     }
 
-    let updateObj = {
-        ...data
-    };
+    const updateObj = { ...data };
+
     if (data.name && existingCategory.name !== data.name) {
+        const slug = generateSlug(data.name);
+
         const anotherCategory = await prisma.category.findUnique({
-            where: {
-                name: data.name,
-            },
+            where: { slug },
         });
-    
-        if (anotherCategory) {
-            throw new ApiError(409, "A category with this name already exists");
+
+        if (anotherCategory && anotherCategory.id !== id) {
+            throw new ApiError(
+                409,
+                "A category with this name already exists"
+            );
         }
-    
-        updateObj.slug = generateSlug(data.name);
+
+        updateObj.slug = slug;
     }
-    const updateCategory = await prisma.category.update({
+
+    return await prisma.category.update({
         where: { id },
         data: updateObj,
-    })
-    return updateCategory
-}
+    });
+};
 
 export const deleteCategory = async (id) => {
     const existingCategory = await prisma.category.findUnique({

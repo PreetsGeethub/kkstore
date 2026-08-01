@@ -69,9 +69,7 @@ export const createProductSchema = z.object({
         .min(10, "Description must be at least 10 characters."),
 
     categoryId: z
-        .string()
-        .trim()
-        .min(1, "Category is required."),
+        .string().cuid(),
 
     material: z
         .string()

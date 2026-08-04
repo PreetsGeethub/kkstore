@@ -109,3 +109,75 @@ export const createProductSchema = z.object({
 
 export const updateProductSchema =
     createProductSchema.partial();
+
+export const getProductsSchema = z
+    .object({
+        page: z.coerce
+            .number()
+            .int()
+            .positive()
+            .default(1),
+
+        limit: z.coerce
+            .number()
+            .int()
+            .positive()
+            .max(100)
+            .default(10),
+
+        search: z.string()
+            .trim()
+            .default(""),
+
+        status: z.enum([
+            "active",
+            "inactive",
+            "all",
+        ]).default("active"),
+
+        categoryId: z.string()
+            .cuid()
+            .optional(),
+
+        availability: z.enum([
+            "all",
+            "inStock",
+            "outOfStock",
+        ]).default("all"),
+
+        minPrice: z.coerce
+            .number()
+            .positive()
+            .optional(),
+
+        maxPrice: z.coerce
+            .number()
+            .positive()
+            .optional(),
+
+        color: z.string()
+            .trim()
+            .optional(),
+
+        sortBy: z.enum([
+            "name",
+            "price",
+            "createdAt",
+            "bestSelling",
+        ]).default("createdAt"),
+
+        order: z.enum([
+            "asc",
+            "desc",
+        ]).default("desc"),
+    })
+    .refine(
+        (data) =>
+            data.minPrice === undefined ||
+            data.maxPrice === undefined ||
+            data.minPrice <= data.maxPrice,
+        {
+            message: "Minimum price cannot be greater than maximum price.",
+            path: ["minPrice"],
+        }
+    );

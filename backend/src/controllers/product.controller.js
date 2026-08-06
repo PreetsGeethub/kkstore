@@ -1,4 +1,5 @@
-import { createProduct , getProducts} from "../services/product.service.js";
+import prisma from "../config/prisma.js";
+import { createProduct , getProducts, getProductById, updateProduct, deleteProduct} from "../services/product.service.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import asyncHandler from "../utils/asyncHandler.js";
 
@@ -25,3 +26,35 @@ export const getAll = asyncHandler(async (req, res) => {
         )
     );
 });
+
+export const getById = asyncHandler(async (req, res) => {
+    const product = await getProductById(req.validated.params.id);
+
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            "Product fetched successfully.",
+            product
+        )
+    );
+});
+
+export const update = asyncHandler(async (req, res) => {
+    const updatedProduct = await updateProduct(req.validated.params.id, req.validated.body);
+    return res.status(200).json(new ApiResponse(
+        200,
+        "Product updated successfully.",
+        updatedProduct
+    )
+)});
+
+export const deleteProd = asyncHandler(async (req, res) => {
+    const deletedProduct = await deleteProduct(req.validated.params.id);
+    return res.status(200).json(new ApiResponse(
+        200,
+        "Product deleted successfully.",
+        deletedProduct
+    )
+)}
+);
+

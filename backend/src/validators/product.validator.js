@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { id } from "zod/v4/locales";
 
 export const variantSchema = z
     .object({
@@ -161,7 +162,6 @@ export const getProductsSchema = z
 
         sortBy: z.enum([
             "name",
-            "price",
             "createdAt",
             "bestSelling",
         ]).default("createdAt"),
@@ -181,3 +181,12 @@ export const getProductsSchema = z
             path: ["minPrice"],
         }
     );
+
+export const getProductByIdSchema = z.object({
+    id: z.string().cuid(),
+});
+
+export const deleteProductSchema = z.object({ 
+    
+    id: z.string().cuid(),
+});

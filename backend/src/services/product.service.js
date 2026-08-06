@@ -17,6 +17,16 @@ export const createProduct = async (productData) => {
             "Product with this name already exists."
         );
     }
+  // Validate Category
+  const category = await prisma.category.findUnique({
+    where: {
+        id: productDetails.categoryId,
+    },
+});
+
+if (!category) {
+    throw new ApiError(404, "Category not found.");
+}
 
     const product = await prisma.product.create({
         data: {
@@ -93,7 +103,6 @@ export const getProducts = async (data) => {
     if (categoryId) {
         where.categoryId = categoryId;
     }
-
     // Variant Filters
     let variantFilter = {};
 
@@ -159,14 +168,14 @@ export const getProducts = async (data) => {
                 name: true,
                 slug: true,
                 status: true,
-            
+
                 category: {
                     select: {
                         id: true,
                         name: true,
                     },
                 },
-            
+
                 images: {
                     select: {
                         imageUrl: true,
@@ -176,7 +185,7 @@ export const getProducts = async (data) => {
                     },
                     take: 1,
                 },
-            
+
                 variants: {
                     select: {
                         price: true,
@@ -222,4 +231,198 @@ export const getProducts = async (data) => {
             hasPreviousPage: page > 1,
         },
     };
+};
+
+export const getProductById = async (id) => {
+    const product = await prisma.product.findUnique({
+        where: { id },
+        include: {
+            category: true,
+
+            images: {
+                orderBy: {
+                    sortOrder: "asc",
+                },
+            },
+
+            variants: {
+                orderBy: {
+                    price: "asc",
+                },
+            },
+
+            reviews: {
+                orderBy: {
+                    createdAt: "desc",
+                },
+                include: {
+                    user: {
+                        select: {
+                            id: true,
+                            firstName: true,
+                            lastName: true,
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    if (!product) {
+        throw new ApiError(404, "Product not found.");
+    }
+
+    return product;
+}
+
+
+
+export const updateProduct = async (data, id) => {
+    const product = await prisma.product.findUnique({
+        where: { id },
+    });
+
+    if (!product) {
+        throw new ApiError(404, "Product not found.");
+    }
+
+    // Validate Category
+    if (
+        data.categoryId &&
+        data.categoryId !== product.categoryId
+    ) {
+        const existingCategory = await prisma.category.findUnique({
+            where: {
+                id: data.categoryId,
+            },
+        });
+
+        if (!existingCategory) {
+            throw new ApiError(404, "Category not found.");
+        }
+    }
+
+    // Build Update Object
+    const updateObj = {
+        ...data,
+    };
+
+    // Validate Name & Generate Slug
+    if (
+        data.name &&
+        data.name !== product.name
+    ) {
+        const slug = generateSlug(data.name);
+
+        const existingProduct = await prisma.product.findUnique({
+            where: {
+                slug,
+            },
+        });
+
+        if (existingProduct) {
+            throw new ApiError(
+                409,
+                "Product with this name already exists."
+            );
+        }
+
+        updateObj.slug = slug;
+    }
+    if (data.images && data.images.length === 0) {
+        throw new ApiError(
+            400,
+            "A product must have at least one image."
+        );
+    }
+
+    if (data.variants && data.variants.length === 0) {
+        throw new ApiError(
+            400,
+            "A product must have at least one variant."
+        );
+    }
+    const updatedProduct = await prisma.$transaction(async (tx) => {
+        // Update Product
+        await tx.product.update({
+            where: { id },
+            data: updateObj,
+        });
+
+        // Replace Images (only if provided)
+        if (data.images) {
+            await tx.productImage.deleteMany({
+                where: {
+                    productId: id,
+                },
+            });
+
+            await tx.productImage.createMany({
+                data: data.images.map((image) => ({
+                    ...image,
+                    productId: id,
+                })),
+            });
+        }
+
+        // Replace Variants (only if provided)
+        if (data.variants) {
+            await tx.variant.deleteMany({
+                where: {
+                    productId: id,
+                },
+            });
+
+            await tx.variant.createMany({
+                data: data.variants.map((variant) => ({
+                    ...variant,
+                    productId: id,
+                })),
+            });
+        }
+
+        // Return Updated Product
+        return await tx.product.findUnique({
+            where: { id },
+            include: {
+                category: true,
+                images: {
+                    orderBy: {
+                        sortOrder: "asc",
+                    },
+                },
+                variants: {
+                    orderBy: {
+                        price: "asc",
+                    },
+                },
+            },
+        });
+    });
+
+    return updatedProduct;
+};
+
+export const deleteProduct = async (id) => {
+    const product = await prisma.product.findUnique({
+        where: { id },
+    });
+
+    if (!product) {
+        throw new ApiError(404, "Product not found.");
+    }
+
+    if (!product.status) {
+        throw new ApiError(
+            409,
+            "Product is already deleted."
+        );
+    }
+
+    return await prisma.product.update({
+        where: { id },
+        data: {
+            status: false,
+        },
+    });
 };

@@ -17,16 +17,16 @@ export const createProduct = async (productData) => {
             "Product with this name already exists."
         );
     }
-  // Validate Category
-  const category = await prisma.category.findUnique({
-    where: {
-        id: productDetails.categoryId,
-    },
-});
+    // Validate Category
+    const category = await prisma.category.findUnique({
+        where: {
+            id: productDetails.categoryId,
+        },
+    });
 
-if (!category) {
-    throw new ApiError(404, "Category not found.");
-}
+    if (!category) {
+        throw new ApiError(404, "Category not found.");
+    }
 
     const product = await prisma.product.create({
         data: {
@@ -274,8 +274,6 @@ export const getProductById = async (id) => {
 
     return product;
 }
-
-
 
 export const updateProduct = async (data, id) => {
     const product = await prisma.product.findUnique({

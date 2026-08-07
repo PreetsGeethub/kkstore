@@ -186,7 +186,7 @@ export const getProductByIdSchema = z.object({
     id: z.string().cuid(),
 });
 
-export const deleteProductSchema = z.object({ 
-    
+export const deleteProductSchema = z.object({
+
     id: z.string().cuid(),
 });

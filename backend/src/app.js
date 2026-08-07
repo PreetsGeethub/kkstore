@@ -6,6 +6,7 @@ import errorHandler from "./middleware/error.middleware.js";
 import authRoutes from "./routes/auth.routes.js";
 import productRoutes from "./routes/product.routes.js"
 import categoryRoutes from "./routes/category.routes.js"
+import wishlistRoutes from "./routes/wishList.routes.js"
 import cookieParser from "cookie-parser";
 const app = express();
 
@@ -26,5 +27,6 @@ app.get("/", (req, res) => {
 app.use("/api/v1/auth",authRoutes);
 app.use("/api/v1/products", productRoutes);
 app.use("/api/v1/categories", categoryRoutes);
+app.use("/api/v1/wishlist", wishlistRoutes);
 app.use(errorHandler);
 export default app;

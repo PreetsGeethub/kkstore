@@ -1,5 +1,5 @@
 import prisma from "../config/prisma.js";
-import { createProduct , getProducts, getProductById, updateProduct, deleteProduct} from "../services/product.service.js";
+import { createProduct, getProducts, getProductById, updateProduct, deleteProduct } from "../services/product.service.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import asyncHandler from "../utils/asyncHandler.js";
 
@@ -46,7 +46,8 @@ export const update = asyncHandler(async (req, res) => {
         "Product updated successfully.",
         updatedProduct
     )
-)});
+    )
+});
 
 export const deleteProd = asyncHandler(async (req, res) => {
     const deletedProduct = await deleteProduct(req.validated.params.id);
@@ -55,6 +56,7 @@ export const deleteProd = asyncHandler(async (req, res) => {
         "Product deleted successfully.",
         deletedProduct
     )
-)}
+    )
+}
 );
 

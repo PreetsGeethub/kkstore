@@ -323,12 +323,13 @@ model Payment {
   orderId String @unique
   order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
-  paymentMethod PaymentMethod
+  paymentMethod PaymentMethod?
   paymentStatus PaymentStatus @default(PENDING)
 
   amount Decimal @db.Decimal(10, 2)
 
-  transactionId String?
+  gatewayOrderId String? @unique   // Razorpay Order ID
+  transactionId  String?           // Razorpay Payment ID
   gateway       String?
 
   paidAt DateTime?

@@ -19,6 +19,7 @@
     "passport-google-oauth20": "^2.0.0",
     "pg": "^8.22.0",
     "prisma": "^7.9.0",
+    "razorpay": "^2.9.8",
     "slugify": "^1.6.9",
     "zod": "^4.4.3"
   },

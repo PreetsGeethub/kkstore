@@ -1,11 +1,12 @@
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiResponse from "../utils/ApiResponse.js";
-import { registerUser, loginUser, logoutUser, refreshUserToken } from "../services/auth.service.js";
+import ApiError from "../utils/ApiError.js";
+import { registerUser, loginUser, logoutUser, refreshUserToken ,completeGoogleProfile} from "../services/auth.service.js";
 import {
     accessTokenOptions,
     refreshTokenOptions,
 } from "../utils/cookieOptions.js";
-
+import { generateProfileCompletionToken,verifyProfileCompletionToken } from "../utils/token.js";
 export const register = asyncHandler(async (req, res) => {
     const userData = req.validated.body;
 
@@ -61,6 +62,68 @@ export const logout = asyncHandler(async (req, res) => {
             )
         );
 });
+
+export const googleCallback = asyncHandler(async (req, res) => {
+    const user = req.user;
+
+    if (!user.phone) {
+        const profileCompletionToken =
+            generateProfileCompletionToken(user);
+
+        return res.status(200).json(
+            new ApiResponse(
+                200,
+                "Phone number is required to complete your profile.",
+                {
+                    requiresProfileCompletion: true,
+                    profileCompletionToken,
+                    
+                }
+            )
+        );
+    }
+
+    // Normal Google login will go here later.
+});
+
+
+export const completeGoogleProfileController = asyncHandler(
+    async (req, res) => {
+        const { phone } = req.validated.body;
+
+        const authHeader = req.headers.authorization;
+
+        if (!authHeader?.startsWith("Bearer ")) {
+            throw new ApiError(
+                401,
+                "Profile completion token is required."
+            );
+        }
+
+        const token = authHeader.split(" ")[1];
+
+        const { userId } =
+            verifyProfileCompletionToken(token);
+
+        const {
+            user,
+            accessToken,
+            refreshToken,
+        } = await completeGoogleProfile(userId, phone);
+
+        return res
+            .cookie("accessToken", accessToken, accessTokenOptions)
+            .cookie("refreshToken", refreshToken, refreshTokenOptions)
+            .status(200)
+            .json(
+                new ApiResponse(
+                    200,
+                    "Google profile completed successfully.",
+                    user
+                )
+            );
+    }
+);
 
 
 export const refresh = asyncHandler(async (req, res) => {

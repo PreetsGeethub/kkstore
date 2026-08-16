@@ -1,386 +1,400 @@
 export const env = {
-    NODE_ENV: process.env.NODE_ENV || "development",
-  
-    PORT: Number(process.env.PORT) || 5000,
-  
-    DATABASE_URL: process.env.DATABASE_URL,
-  
-    BCRYPT_SALT_ROUNDS:
-      Number(process.env.BCRYPT_SALT_ROUNDS) || 12,
-  
-    JWT_ACCESS_SECRET: process.env.JWT_ACCESS_SECRET,
-  
-    JWT_ACCESS_EXPIRES_IN:
-      process.env.JWT_ACCESS_EXPIRES_IN || "15m",
-  
-    JWT_REFRESH_SECRET:
-      process.env.JWT_REFRESH_SECRET,
-  
-    JWT_REFRESH_EXPIRES_IN:
-      process.env.JWT_REFRESH_EXPIRES_IN || "7d",
-  
-    GOOGLE_CLIENT_ID:
-      process.env.GOOGLE_CLIENT_ID,
-  
-    GOOGLE_CLIENT_SECRET:
-      process.env.GOOGLE_CLIENT_SECRET,
-  
-    GOOGLE_CALLBACK_URL:
-      process.env.GOOGLE_CALLBACK_URL,
-  
-    CLIENT_URL:
-      process.env.CLIENT_URL || "http://localhost:5173",
+  NODE_ENV: process.env.NODE_ENV || "development",
 
-      RAZORPAY_KEY_ID: process.env.RAZORPAY_KEY_ID,
-      RAZORPAY_KEY_SECRET: process.env.RAZORPAY_KEY_SECRET,
-      RAZORPAY_WEBHOOK_SECRET:process.env.RAZORPAY_WEBHOOK_SECRET
-  };
+  PORT: Number(process.env.PORT) || 5000,
+
+  DATABASE_URL: process.env.DATABASE_URL,
+
+  BCRYPT_SALT_ROUNDS:
+    Number(process.env.BCRYPT_SALT_ROUNDS) || 12,
+
+  JWT_ACCESS_SECRET: process.env.JWT_ACCESS_SECRET,
+
+  JWT_ACCESS_EXPIRES_IN:
+    process.env.JWT_ACCESS_EXPIRES_IN || "15m",
+
+  JWT_REFRESH_SECRET:
+    process.env.JWT_REFRESH_SECRET,
+
+  JWT_REFRESH_EXPIRES_IN:
+    process.env.JWT_REFRESH_EXPIRES_IN || "7d",
+
+  GOOGLE_CLIENT_ID:
+    process.env.GOOGLE_CLIENT_ID,
+
+  GOOGLE_CLIENT_SECRET:
+    process.env.GOOGLE_CLIENT_SECRET,
+
+  GOOGLE_CALLBACK_URL:
+    process.env.GOOGLE_CALLBACK_URL,
+
+  CLIENT_URL:
+    process.env.CLIENT_URL || "http://localhost:5173",
+
+  RAZORPAY_KEY_ID: process.env.RAZORPAY_KEY_ID,
+  RAZORPAY_KEY_SECRET: process.env.RAZORPAY_KEY_SECRET,
+  RAZORPAY_WEBHOOK_SECRET: process.env.RAZORPAY_WEBHOOK_SECRET,
+
+      GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+
+  GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
+
+  GOOGLE_CALLBACK_URL:
+    process.env.GOOGLE_CALLBACK_URL,
+
+
+    JWT_PROFILE_COMPLETION_SECRET:
+    process.env.JWT_PROFILE_COMPLETION_SECRET,
+
+JWT_PROFILE_COMPLETION_EXPIRES_IN:
+    process.env.JWT_PROFILE_COMPLETION_EXPIRES_IN || "10m",
+};
 
 
 
 
-  /* 
-  
-  // This is your Prisma schema file,
+/*
+ 
+// This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
-  provider = "prisma-client-js"
-  output   = "../generated/prisma"
+provider = "prisma-client-js"
+output   = "../generated/prisma"
 }
 
 datasource db {
-  provider = "postgresql"
+provider = "postgresql"
 }
 enum UserRole {
-  CUSTOMER
-  ADMIN
+CUSTOMER
+ADMIN
 }
 
 model User {
-  id String @id @default(cuid())
+id String @id @default(cuid())
 
-  addresses     Address[]
-  cart          Cart?
-  wishlistItems WishlistItem[]
-  reviews       Review[]
-  orders        Order[]
+addresses     Address[]
+cart          Cart?
+wishlistItems WishlistItem[]
+reviews       Review[]
+orders        Order[]
 
-  firstName String
-  lastName String
-  email    String   @unique
-  password String?
-  phone    String   @unique
-  role     UserRole @default(CUSTOMER)
+firstName String
+lastName String
+email    String   @unique
+password String?
+phone    String   @unique
+role     UserRole @default(CUSTOMER)
 
-  isVerified Boolean @default(false)
-  isActive   Boolean @default(true)
-  isGuest    Boolean @default(false)
+isVerified Boolean @default(false)
+isActive   Boolean @default(true)
+isGuest    Boolean @default(false)
 
-  googleId String? @unique
+googleId String? @unique
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+createdAt DateTime @default(now())
+updatedAt DateTime @updatedAt
 }
 
 model Address {
-  id String @id @default(cuid())
+id String @id @default(cuid())
 
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+userId String
+user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  fullName String
-  phone    String
+fullName String
+phone    String
 
-  addressLine1 String
-  addressLine2 String?
+addressLine1 String
+addressLine2 String?
 
-  city       String
-  state      String
-  postalCode String
-  country    String
+city       String
+state      String
+postalCode String
+country    String
 
-  isDefault Boolean @default(false)
+isDefault Boolean @default(false)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+createdAt DateTime @default(now())
+updatedAt DateTime @updatedAt
 }
 
 model Cart {
-  id String @id @default(cuid())
+id String @id @default(cuid())
 
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+userId String @unique
+user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  cartItems CartItem[]
+cartItems CartItem[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+createdAt DateTime @default(now())
+updatedAt DateTime @updatedAt
 }
 
 model CartItem {
-  id String @id @default(cuid())
+id String @id @default(cuid())
 
-  cartId String
-  cart   Cart   @relation(fields: [cartId], references: [id], onDelete: Cascade)
+cartId String
+cart   Cart   @relation(fields: [cartId], references: [id], onDelete: Cascade)
 
-  variantId String
-  variant   Variant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+variantId String
+variant   Variant @relation(fields: [variantId], references: [id], onDelete: Cascade)
 
-  quantity Int @default(1)
+quantity Int @default(1)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+createdAt DateTime @default(now())
+updatedAt DateTime @updatedAt
 
-  @@unique([cartId, variantId])
+@@unique([cartId, variantId])
 }
 
 model WishlistItem {
-  id String @id @default(cuid())
+id String @id @default(cuid())
 
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+userId String
+user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  productId String
-  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+productId String
+product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+createdAt DateTime @default(now())
+updatedAt DateTime @updatedAt
 
-  @@unique([userId, productId])
+@@unique([userId, productId])
 }
 
 model Category {
-  id String @id @default(cuid())
+id String @id @default(cuid())
 
-  name String @unique
-  slug String @unique
+name String @unique
+slug String @unique
 
-  image String?
+image String?
 
-  status Boolean @default(true)
+status Boolean @default(true)
 
-  products Product[]
+products Product[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+createdAt DateTime @default(now())
+updatedAt DateTime @updatedAt
 }
 
 model Product {
-  id String @id @default(cuid())
+id String @id @default(cuid())
 
-  categoryId String
-  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+categoryId String
+category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
-  wishlistItems WishlistItem[]
-  variants      Variant[]
-  images        ProductImage[]
-  reviews       Review[]
+wishlistItems WishlistItem[]
+variants      Variant[]
+images        ProductImage[]
+reviews       Review[]
 
-  name        String
-  slug        String @unique
-  description String
+name        String
+slug        String @unique
+description String
 
-  material         String
-  careInstructions String
+material         String
+careInstructions String
 
-  gifUrl String?
+gifUrl String?
 
-  isAntiTarnish  Boolean @default(false)
-  isWaterproof   Boolean @default(false)
-  isSkinFriendly Boolean @default(false)
+isAntiTarnish  Boolean @default(false)
+isWaterproof   Boolean @default(false)
+isSkinFriendly Boolean @default(false)
 
-  isFeatured   Boolean @default(false)
-  isBestSeller Boolean @default(false)
-  isNewArrival Boolean @default(false)
+isFeatured   Boolean @default(false)
+isBestSeller Boolean @default(false)
+isNewArrival Boolean @default(false)
 
-  status Boolean @default(true)
+status Boolean @default(true)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+createdAt DateTime @default(now())
+updatedAt DateTime @updatedAt
 
-  @@index([categoryId])
-  @@index([status])
-  @@index([isFeatured])
-  @@index([isBestSeller])
-  @@index([isNewArrival])
+@@index([categoryId])
+@@index([status])
+@@index([isFeatured])
+@@index([isBestSeller])
+@@index([isNewArrival])
 }
 
 model Variant {
-  id String @id @default(cuid())
+id String @id @default(cuid())
 
-  productId String
-  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+productId String
+product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-  cartItems  CartItem[]
-  orderItems OrderItem[]
+cartItems  CartItem[]
+orderItems OrderItem[]
 
-  sku String @unique
+sku String @unique
 
-  color String
-  size  String?
+color String
+size  String?
 
-  price  Decimal @db.Decimal(10, 2)
-  stock  Int     @default(0)
-  status Boolean @default(true)
+price  Decimal @db.Decimal(10, 2)
+stock  Int     @default(0)
+status Boolean @default(true)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+createdAt DateTime @default(now())
+updatedAt DateTime @updatedAt
 
-  @@index([productId])
-  @@index([status])
+@@index([productId])
+@@index([status])
 }
 
 model ProductImage {
-  id String @id @default(cuid())
+id String @id @default(cuid())
 
-  productId String
-  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+productId String
+product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-  imageUrl String
+imageUrl String
 
-  sortOrder Int @default(0)
+sortOrder Int @default(0)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+createdAt DateTime @default(now())
+updatedAt DateTime @updatedAt
 }
 
 model Review {
-  id String @id @default(cuid())
+id String @id @default(cuid())
 
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+userId String
+user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  productId String
-  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+productId String
+product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-  rating Int
+rating Int
 
-  title   String?
-  comment String
+title   String?
+comment String
 
-  isVerifiedPurchase Boolean @default(false)
+isVerifiedPurchase Boolean @default(false)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+createdAt DateTime @default(now())
+updatedAt DateTime @updatedAt
 
-  @@unique([userId, productId])
-  @@index([productId])
+@@unique([userId, productId])
+@@index([productId])
 }
 
 enum OrderStatus {
-  PENDING
-  PAID
-  PROCESSING
-  SHIPPED
-  DELIVERED
-  CANCELLED
+PENDING
+PAID
+PROCESSING
+SHIPPED
+DELIVERED
+CANCELLED
 }
 
 model Order {
-  id          String @id @default(cuid())
-  orderNumber String @unique
+id          String @id @default(cuid())
+orderNumber String @unique
 
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Restrict)
+userId String
+user   User   @relation(fields: [userId], references: [id], onDelete: Restrict)
 
-  payment Payment?
+payment Payment?
 
-  subtotal       Decimal @db.Decimal(10, 2)
-  discountAmount Decimal @default(0) @db.Decimal(10, 2)
-  shippingCost   Decimal @default(0) @db.Decimal(10, 2)
-  totalAmount    Decimal @db.Decimal(10, 2)
+subtotal       Decimal @db.Decimal(10, 2)
+discountAmount Decimal @default(0) @db.Decimal(10, 2)
+shippingCost   Decimal @default(0) @db.Decimal(10, 2)
+totalAmount    Decimal @db.Decimal(10, 2)
 
-  shippingFullName String
-  shippingPhone    String
+shippingFullName String
+shippingPhone    String
 
-  shippingAddressLine1 String
-  shippingAddressLine2 String?
+shippingAddressLine1 String
+shippingAddressLine2 String?
 
-  shippingCity       String
-  shippingState      String
-  shippingPostalCode String
-  shippingCountry    String
+shippingCity       String
+shippingState      String
+shippingPostalCode String
+shippingCountry    String
 
-  status OrderStatus @default(PENDING)
+status OrderStatus @default(PENDING)
 
-  orderItems OrderItem[]
+orderItems OrderItem[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+createdAt DateTime @default(now())
+updatedAt DateTime @updatedAt
 
-  @@index([userId])
-  @@index([status])
-  @@index([createdAt])
+@@index([userId])
+@@index([status])
+@@index([createdAt])
 }
 
 model OrderItem {
-  id String @id @default(cuid())
+id String @id @default(cuid())
 
-  orderId String
-  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+orderId String
+order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
-  variantId String?
-  variant   Variant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+variantId String?
+variant   Variant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
 
-  productName String
-  sku         String
+productName String
+sku         String
 
-  color String
-  size  String?
+color String
+size  String?
 
-  priceAtPurchase Decimal @db.Decimal(10, 2)
-  quantity        Int
-  lineTotal       Decimal @db.Decimal(10, 2)
+priceAtPurchase Decimal @db.Decimal(10, 2)
+quantity        Int
+lineTotal       Decimal @db.Decimal(10, 2)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+createdAt DateTime @default(now())
+updatedAt DateTime @updatedAt
 
-  @@index([orderId])
-  @@index([variantId])
+@@index([orderId])
+@@index([variantId])
 }
 
 enum PaymentMethod {
-  UPI
-  CARD
-  NET_BANKING
-  WALLET
-  COD
+UPI
+CARD
+NET_BANKING
+WALLET
+COD
 }
 
 enum PaymentStatus {
-  PENDING
-  SUCCESS
-  FAILED
-  REFUNDED
+PENDING
+SUCCESS
+FAILED
+REFUNDED
 }
 
 model Payment {
-  id String @id @default(cuid())
+id String @id @default(cuid())
 
-  orderId String @unique
-  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+orderId String @unique
+order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
-  paymentMethod PaymentMethod
-  paymentStatus PaymentStatus @default(PENDING)
+paymentMethod PaymentMethod
+paymentStatus PaymentStatus @default(PENDING)
 
-  amount Decimal @db.Decimal(10, 2)
+amount Decimal @db.Decimal(10, 2)
 
-  transactionId String?
-  gateway       String?
+transactionId String?
+gateway       String?
 
-  paidAt DateTime?
+paidAt DateTime?
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+createdAt DateTime @default(now())
+updatedAt DateTime @updatedAt
 
-  @@index([paymentStatus])
+@@index([paymentStatus])
 }
 
-  
-  
-  
-  
-  */
+ 
+ 
+ 
+ 
+*/

@@ -3,6 +3,7 @@ import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import errorHandler from "./middleware/error.middleware.js";
+import passport from "./config/passport.js";
 import authRoutes from "./routes/auth.routes.js";
 import productRoutes from "./routes/product.routes.js"
 import categoryRoutes from "./routes/category.routes.js"
@@ -14,11 +15,16 @@ import reviewRoutes from "./routes/review.routes.js"
 import cookieParser from "cookie-parser";
 const app = express();
 
+
+
+app.use(passport.initialize());
 // Webhook must come BEFORE express.json()
 app.use(
   "/api/v1/payments/webhook",
   express.raw({ type: "application/json" })
 );
+
+
 
 app.use(express.json());
 app.use(cors());

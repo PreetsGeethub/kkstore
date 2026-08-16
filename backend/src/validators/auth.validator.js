@@ -44,3 +44,12 @@ export  const loginSchema = z.object({
       .string()
       .min(1, "Password is required."),
   });
+  export const completeGoogleProfileSchema = z.object({
+    phone: z
+        .string()
+        .trim()
+        .regex(
+            /^[6-9]\d{9}$/,
+            "Please enter a valid Indian mobile number."
+        ),
+});

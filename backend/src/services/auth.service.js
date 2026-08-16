@@ -119,6 +119,129 @@ export const loginUser = async (data) =>{
 }
 
 
+export const loginWithGoogle = async (profile) => {
+    const googleId = profile.id;
+    const email = profile.emails?.[0]?.value;
+
+    if (!email) {
+        throw new ApiError(
+            400,
+            "Google account email could not be retrieved."
+        );
+    }
+
+    // 1. Find by Google ID
+    let user = await prisma.user.findUnique({
+        where: {
+            googleId,
+        },
+    });
+
+    if (user) {
+        return user;
+    }
+
+    // 2. Find existing account by email
+    user = await prisma.user.findUnique({
+        where: {
+            email,
+        },
+    });
+
+    // 3. Existing account → link Google account
+    if (user) {
+        user = await prisma.user.update({
+            where: {
+                id: user.id,
+            },
+            data: {
+                googleId,
+            },
+        });
+
+        return user;
+    }
+
+    // 4. Completely new Google user
+    const firstName =
+        profile.name?.givenName ||
+        profile.displayName?.split(" ")[0] ||
+        "";
+
+    const lastName =
+        profile.name?.familyName ||
+        profile.displayName?.split(" ").slice(1).join(" ") ||
+        "";
+
+    user = await prisma.user.create({
+        data: {
+            firstName,
+            lastName,
+            email,
+            googleId,
+            password: null,
+            phone: null,
+        },
+    });
+
+    return user;
+};
+
+export const completeGoogleProfile = async (userId, phone) => {
+    const existingUser = await prisma.user.findUnique({
+        where: {
+            phone,
+        },
+        select: {
+            id: true,
+        },
+    });
+
+    if (existingUser && existingUser.id !== userId) {
+        throw new ApiError(
+            409,
+            "Phone number is already registered."
+        );
+    }
+
+    const user = await prisma.user.update({
+        where: {
+            id: userId,
+        },
+        data: {
+            phone,
+        },
+        select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            phone: true,
+            role: true,
+            isVerified: true,
+            isActive: true,
+        },
+    });
+
+    const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
+
+    await prisma.user.update({
+        where: {
+            id: user.id,
+        },
+        data: {
+            refreshToken,
+        },
+    });
+
+    return {
+        user,
+        accessToken,
+        refreshToken,
+    };
+};
+
 export const logoutUser = async (id) =>{
     await prisma.user.update({
         where : {

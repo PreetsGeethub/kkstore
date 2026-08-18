@@ -26,12 +26,12 @@ model User {
   reviews       Review[]
   orders        Order[]
 
-  firstName String
-  lastName  String
-  email     String   @unique
-  password  String?
-  phone String?   @unique
-  role      UserRole @default(CUSTOMER)
+  firstName    String
+  lastName     String
+  email        String   @unique
+  password     String?
+  phone        String?  @unique
+  role         UserRole @default(CUSTOMER)
   refreshToken String?
 
   isVerified Boolean @default(false)
@@ -173,18 +173,19 @@ model Variant {
   productId String
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-  cartItems  CartItem[]
-  orderItems OrderItem[]
+  cartItems      CartItem[]
+  guestCartItems GuestCartItem[]
+  orderItems     OrderItem[]
 
   sku String @unique
 
   color String
   size  String?
 
-  price  Decimal @db.Decimal(10, 2)
-  comparePrice Decimal? @db.Decimal(10,2)
-  stock  Int     @default(0)
-  status Boolean @default(true)
+  price        Decimal  @db.Decimal(10, 2)
+  comparePrice Decimal? @db.Decimal(10, 2)
+  stock        Int      @default(0)
+  status       Boolean  @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -231,20 +232,26 @@ model Review {
 }
 
 enum OrderStatus {
-  PENDING
-  PAID
-  PROCESSING
+  PENDING_PAYMENT
+  CONFIRMED
+  PACKED
   SHIPPED
+  OUT_FOR_DELIVERY
   DELIVERED
+  PAYMENT_FAILED
   CANCELLED
+  REPLACEMENT_REQUESTED
+  REPLACEMENT_APPROVED
+  REPLACEMENT_REJECTED
 }
 
 model Order {
   id          String @id @default(cuid())
   orderNumber String @unique
 
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Restrict)
+  userId     String?
+  user       User?   @relation(fields: [userId], references: [id], onDelete: Restrict)
+  guestEmail String?
 
   payment Payment?
 
@@ -264,7 +271,7 @@ model Order {
   shippingPostalCode String
   shippingCountry    String
 
-  status OrderStatus @default(PENDING)
+  status OrderStatus @default(PENDING_PAYMENT)
 
   orderItems OrderItem[]
 
@@ -324,13 +331,13 @@ model Payment {
   order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   paymentMethod PaymentMethod?
-  paymentStatus PaymentStatus @default(PENDING)
+  paymentStatus PaymentStatus  @default(PENDING)
 
   amount Decimal @db.Decimal(10, 2)
 
-  gatewayOrderId String? @unique   // Razorpay Order ID
-  transactionId  String?           // Razorpay Payment ID
-  gateway       String?
+  gatewayOrderId String? @unique // Razorpay Order ID
+  transactionId  String? // Razorpay Payment ID
+  gateway        String?
 
   paidAt DateTime?
 
@@ -340,3 +347,32 @@ model Payment {
   @@index([paymentStatus])
 }
 
+model GuestCart {
+  id String @id @default(cuid())
+
+  guestToken String @unique
+
+  cartItems GuestCartItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model GuestCartItem {
+  id String @id @default(cuid())
+
+  guestCartId String
+  guestCart   GuestCart @relation(fields: [guestCartId], references: [id], onDelete: Cascade)
+
+  variantId String
+  variant   Variant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  quantity Int @default(1)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([guestCartId, variantId])
+  @@index([guestCartId])
+  @@index([variantId])
+}

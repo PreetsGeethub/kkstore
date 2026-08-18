@@ -11,7 +11,7 @@ export const createPayment = async (orderId, userId) => {
             where: {
                 id: orderId,
                 userId,
-                status: OrderStatus.PENDING,
+                status: OrderStatus.PENDING_PAYMENT,
             },
             select: {
                 id: true,
@@ -169,7 +169,7 @@ export const verifyPayment = async (paymentData) => {
                 id: payment.orderId,
             },
             data: {
-                status: OrderStatus.PAID,
+                status: OrderStatus.CONFIRMED,
             },
         });
 
@@ -180,7 +180,7 @@ export const verifyPayment = async (paymentData) => {
 };
 
 
-export const getPayment = async(orderId) =>{
+export const getPayment = async(orderId,userId) =>{
     const payment = await prisma.payment.findFirst({
         where: {
             orderId,
@@ -305,7 +305,7 @@ export const handleWebhook = async (req) => {
                 id: existingPayment.orderId,
             },
             data: {
-                status: OrderStatus.PAID,
+                status: OrderStatus.CONFIRMED,
             },
         });
     

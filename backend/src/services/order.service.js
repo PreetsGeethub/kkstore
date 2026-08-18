@@ -88,7 +88,7 @@ export const createOrder = async (orderData, userId) => {
 
                 ...orderData,
 
-                status: OrderStatus.PENDING,
+                status: OrderStatus.PENDING_PAYMENT,
             },
         });
 
@@ -306,9 +306,7 @@ export const cancelOrder = async (orderId, userId) => {
             where: {
                 id: orderId,
                 userId: userId,
-                status: {
-                    in: [OrderStatus.PENDING, OrderStatus.PAID, OrderStatus.PROCESSING],
-                },
+                status: OrderStatus.CONFIRMED,
             },
             include : {
                 orderItems: true,

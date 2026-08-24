@@ -61,3 +61,9 @@ export const verifyProfileCompletionToken = (token) => {
     }
 };
 
+export const guestCartTokenOptions = {
+    httpOnly: true,
+    secure: env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 30 * 24 * 60 * 60 * 1000,
+};

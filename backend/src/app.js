@@ -14,6 +14,7 @@ import paymentRoutes from "./routes/payment.routes.js"
 import reviewRoutes from "./routes/review.routes.js"
 import addressRoutes from "./routes/address.routes.js"
 import guestcartRoutes from "./routes/guestCart.routes.js"
+import couponRoutes from "./routes/coupon.routes.js"
 import cookieParser from "cookie-parser";
 const app = express();
 
@@ -52,5 +53,6 @@ app.use("/api/v1/payments", paymentRoutes);
 app.use("/api/v1/reviews", reviewRoutes);
 app.use("/api/v1/addresses", addressRoutes);
 app.use("/api/v1/guest-cart", guestcartRoutes);
+app.use("/api/v1/coupons", couponRoutes);
 app.use(errorHandler);
 export default app;

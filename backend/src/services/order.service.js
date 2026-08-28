@@ -548,3 +548,210 @@ export const cancelOrder = async (orderId, userId) => {
     });
 }
 
+
+export const getAllOrders = async (data) => {
+    const {
+        search,
+        status,
+        sortBy,
+        order,
+        page,
+        limit,
+    } = data;
+
+    const where = {};
+
+    // Search by order number
+    if (search) {
+        where.orderNumber = {
+            contains: search,
+            mode: "insensitive",
+        };
+    }
+
+    // Filter by status
+    if (status !== "all") {
+        where.status = status;
+    }
+
+    // Sorting
+    const orderBy = {
+        [sortBy]: order,
+    };
+
+    const skip = (page - 1) * limit;
+    const take = limit;
+
+    const [orders, totalOrders] = await Promise.all([
+        prisma.order.findMany({
+            where,
+            orderBy,
+            skip,
+            take,
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        firstName: true,
+                        lastName: true,
+                        email: true,
+                    },
+                },
+                orderItems: {
+                    select: {
+                        productName: true,
+                        sku: true,
+                        quantity: true,
+                        priceAtPurchase: true,
+                        lineTotal: true,
+                    },
+                },
+            },
+        }),
+
+        prisma.order.count({
+            where,
+        }),
+    ]);
+
+    const totalPages = Math.ceil(
+        totalOrders / limit
+    );
+
+    return {
+        orders,
+        pagination: {
+            total: totalOrders,
+            page,
+            limit,
+            totalPages,
+            hasNextPage: page < totalPages,
+            hasPreviousPage: page > 1,
+        },
+    };
+};
+
+
+export const getAdminOrderById = async (orderId) => {
+    const order = await prisma.order.findUnique({
+        where: {
+            id: orderId,
+        },
+        include: {
+            user: {
+                select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    email: true,
+                    phone: true,
+                },
+            },
+
+            orderItems: {
+                include: {
+                    variant: {
+                        select: {
+                            id: true,
+                            sku: true,
+                            color: true,
+                            size: true,
+                            price: true,
+
+                            product: {
+                                select: {
+                                    id: true,
+                                    name: true,
+                                    slug: true,
+
+                                    images: {
+                                        orderBy: {
+                                            sortOrder: "asc",
+                                        },
+                                        take: 1,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+
+            payment: {
+                select: {
+                    id: true,
+                    paymentMethod: true,
+                    paymentStatus: true,
+                    amount: true,
+                    transactionId: true,
+                    gateway: true,
+                    gatewayOrderId: true,
+                    paidAt: true,
+                    createdAt: true,
+                },
+            },
+
+            couponUsages: {
+                include: {
+                    coupon: {
+                        select: {
+                            id: true,
+                            code: true,
+                            discountType: true,
+                            discountValue: true,
+                        },
+                    },
+                },
+            },
+        },
+    });
+
+    if (!order) {
+        throw new ApiError(
+            404,
+            "Order not found."
+        );
+    }
+
+    return order;
+};
+
+
+export const updateOrderStatus = async (orderId, status) => {
+    const order = await prisma.order.findUnique({
+        where: {
+            id: orderId,
+        },
+        select: {
+            id: true,
+            orderNumber: true,
+            status: true,
+        },
+    });
+
+    if (!order) {
+        throw new ApiError(
+            404,
+            "Order not found."
+        );
+    }
+
+    if (order.status === status) {
+        throw new ApiError(
+            409,
+            `Order is already ${status}.`
+        );
+    }
+
+    const updatedOrder = await prisma.order.update({
+        where: {
+            id: orderId,
+        },
+        data: {
+            status,
+        },
+    });
+
+    return updatedOrder;
+};
+

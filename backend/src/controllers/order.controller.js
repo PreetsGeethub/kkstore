@@ -3,22 +3,39 @@ import ApiResponse from "../utils/ApiResponse.js";
 import { createOrder, getOrders, getOrderById, cancelOrder } from "../services/order.service.js";
 
 
+
 export const createOrderController = asyncHandler(async (req, res) => {
-    const userId = req.user.id;
-    const orderData = req.validated.body;
 
-    const order = await createOrder(orderData,userId);
+    const userId = req.user?.id ?? null;
 
-    res.status(201).json(
+    const guestToken = userId
+        ? null
+        : req.cookies.guestCartToken;
+
+    const {
+        guestEmail,
+        addressId,
+        shipping,
+        couponCode,
+    } = req.validated.body;
+
+    const order = await createOrder({
+        userId,
+        guestToken,
+        guestEmail,
+        addressId,
+        shipping,
+        couponCode,
+    });
+
+    return res.status(201).json(
         new ApiResponse(
             201,
             "Order created successfully.",
             order
         )
     );
-}
-
-);
+});
 
 export const getOrderController = asyncHandler(async (req, res) => {
     const userId = req.user.id;
@@ -49,17 +66,17 @@ export const  getOrderByIdController = asyncHandler( async (req,res) => {
     )
 })
 
-export const cancelOrderController = asyncHandler( async ( req, res) => {
+export const cancelOrderController = asyncHandler(async (req, res) => {
     const userId = req.user.id;
-    const {orderId} = req.validated.params;
+    const { orderId } = req.validated.params;
 
-    const order = await cancelOrder(orderId,userId);
+    const order = await cancelOrder(orderId, userId);
 
-    return res.status(201).json(
-        new  ApiResponse(
-            201,
-            "Order cancelled successfully !!",
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            "Order cancelled successfully.",
             order
         )
-    )
-})
+    );
+});

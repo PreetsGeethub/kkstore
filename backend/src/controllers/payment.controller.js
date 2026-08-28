@@ -5,13 +5,14 @@ import {
     createPayment,
     verifyPayment,
     getPayment,
+    handleWebhook,
 } from "../services/payment.service.js";
 
+
 export const createPaymentController = asyncHandler(async (req, res) => {
-    const userId = req.user.id;
     const { orderId } = req.validated.body;
 
-    const payment = await createPayment(orderId, userId);
+    const payment = await createPayment(orderId);
 
     return res.status(201).json(
         new ApiResponse(
@@ -21,6 +22,7 @@ export const createPaymentController = asyncHandler(async (req, res) => {
         )
     );
 });
+
 
 export const verifyPaymentController = asyncHandler(async (req, res) => {
     const paymentData = req.validated.body;
@@ -36,11 +38,15 @@ export const verifyPaymentController = asyncHandler(async (req, res) => {
     );
 });
 
+
 export const getPaymentController = asyncHandler(async (req, res) => {
     const userId = req.user.id;
     const { paymentId } = req.validated.params;
 
-    const payment = await getPayment(paymentId, userId);
+    const payment = await getPayment(
+        paymentId,
+        userId
+    );
 
     return res.status(200).json(
         new ApiResponse(

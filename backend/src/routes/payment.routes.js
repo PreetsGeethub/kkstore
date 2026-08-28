@@ -1,5 +1,6 @@
 import { Router } from "express";
 
+import optionalProtect from "../middleware/optionalProtect.middleware.js";
 import protect from "../middleware/protect.middleware.js";
 import validate from "../middleware/validate.middleware.js";
 
@@ -7,7 +8,7 @@ import {
     createPaymentController,
     verifyPaymentController,
     getPaymentController,
-    webhookController
+    webhookController,
 } from "../controllers/payment.controller.js";
 
 import {
@@ -18,20 +19,22 @@ import {
 
 const router = Router();
 
+// Guest + authenticated orders
 router.post(
     "/",
-    protect,
+    optionalProtect,
     validate(createPaymentSchema),
     createPaymentController
 );
 
+// Razorpay verification
 router.post(
     "/verify",
-    protect,
     validate(verifyPaymentSchema),
     verifyPaymentController
 );
 
+// Authenticated users only
 router.get(
     "/:paymentId",
     protect,
@@ -39,5 +42,10 @@ router.get(
     getPaymentController
 );
 
-router.post("/webhook", webhookController);
+// Razorpay webhook
+router.post(
+    "/webhook",
+    webhookController
+);
+
 export default router;

@@ -182,3 +182,168 @@ export const deleteReview = async (userId, reviewId) => {
 
     return deletedReview;
 };
+
+export const getAllReviews = async ({
+    page,
+    limit,
+    search,
+    rating,
+}) => {
+    const where = {};
+
+    if (rating !== "all") {
+        where.rating = Number(rating);
+    }
+
+    if (search) {
+        where.OR = [
+            {
+                comment: {
+                    contains: search,
+                    mode: "insensitive",
+                },
+            },
+            {
+                title: {
+                    contains: search,
+                    mode: "insensitive",
+                },
+            },
+            {
+                product: {
+                    name: {
+                        contains: search,
+                        mode: "insensitive",
+                    },
+                },
+            },
+        ];
+    }
+
+    const skip = (page - 1) * limit;
+
+    const [reviews, totalReviews] = await Promise.all([
+        prisma.review.findMany({
+            where,
+            orderBy: {
+                createdAt: "desc",
+            },
+            skip,
+            take: limit,
+            select: {
+                id: true,
+                rating: true,
+                title: true,
+                comment: true,
+                isVerifiedPurchase: true,
+                createdAt: true,
+
+                user: {
+                    select: {
+                        id: true,
+                        firstName: true,
+                        lastName: true,
+                        email: true,
+                    },
+                },
+
+                product: {
+                    select: {
+                        id: true,
+                        name: true,
+                        slug: true,
+                    },
+                },
+            },
+        }),
+
+        prisma.review.count({
+            where,
+        }),
+    ]);
+
+    const totalPages = Math.ceil(totalReviews / limit);
+
+    return {
+        reviews,
+        pagination: {
+            total: totalReviews,
+            page,
+            limit,
+            totalPages,
+            hasNextPage: page < totalPages,
+            hasPreviousPage: page > 1,
+        },
+    };
+};
+
+
+export const getAdminReviewById = async (reviewId) => {
+    const review = await prisma.review.findUnique({
+        where: {
+            id: reviewId,
+        },
+        select: {
+            id: true,
+            rating: true,
+            title: true,
+            comment: true,
+            isVerifiedPurchase: true,
+            createdAt: true,
+            updatedAt: true,
+
+            user: {
+                select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    email: true,
+                },
+            },
+
+            product: {
+                select: {
+                    id: true,
+                    name: true,
+                    slug: true,
+                },
+            },
+        },
+    });
+
+    if (!review) {
+        throw new ApiError(
+            404,
+            "Review not found."
+        );
+    }
+
+    return review;
+};
+
+
+export const deleteAdminReview = async (reviewId) => {
+    const review = await prisma.review.findUnique({
+        where: {
+            id: reviewId,
+        },
+        select: {
+            id: true,
+        },
+    });
+
+    if (!review) {
+        throw new ApiError(
+            404,
+            "Review not found."
+        );
+    }
+
+    const deletedReview = await prisma.review.delete({
+        where: {
+            id: reviewId,
+        },
+    });
+
+    return deletedReview;
+};

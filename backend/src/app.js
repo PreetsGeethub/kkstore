@@ -18,6 +18,7 @@ import couponRoutes from "./routes/coupon.routes.js"
 import adminOrderRoutes from "./routes/adminOrder.routes.js";
 import adminCouponRoutes from "./routes/adminCoupon.routes.js";
 import adminReviewRoutes from "./routes/adminReview.routes.js";
+import adminInventoryRoutes from "./routes/adminInventory.routes.js";
 import cookieParser from "cookie-parser";
 const app = express();
 
@@ -60,5 +61,9 @@ app.use("/api/v1/coupons", couponRoutes);
 app.use("/api/v1/admin/orders", adminOrderRoutes);
 app.use("/api/v1/admin/coupons", adminCouponRoutes);
 app.use("/api/v1/admin/reviews", adminReviewRoutes);
+app.use(
+  "/api/v1/admin/inventory",
+  adminInventoryRoutes
+);
 app.use(errorHandler);
 export default app;

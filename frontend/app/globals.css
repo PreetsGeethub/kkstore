@@ -1,0 +1,44 @@
+/* globals.css — add this so Tailwind knows your brand tokens as real utility classes */
+@import "tailwindcss";
+
+@theme inline {
+  --color-champagne-gold: #B08D57;
+  --color-champagne-gold-light: #C9A96E;
+  --color-deep-espresso: #2A1E17;
+  --color-soft-beige: #E8D8C5;
+  --color-warm-white: #FAF7F2;
+  --color-pure-white: #FFFFFF;
+  --color-body-text: #4A4A4A;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--color-warm-white);
+  color: var(--color-body-text);
+  font-family: var(--font-inter), sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-playfair), serif;
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  animation: marquee 20s linear infinite;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}

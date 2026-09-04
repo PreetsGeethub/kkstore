@@ -1,17 +1,26 @@
+// app/page.tsx
+import Hero from "@/components/Hero";
+import TrustBar from "@/components/TrustBar";
+import ShopByCategory from "@/components/ShopByCategory";
+import ProductShowcase from "@/components/ProductShowcase";
+import Philosophy from "@/components/Philosophy";
+import Testimonials from "@/components/Testimonials";
+import InstagramGallery from "@/components/InstagramGallery";
+import FAQ from "@/components/FAQ";
+import Newsletter from "@/components/Newsletter";
+
 export default function Home() {
   return (
-    <main className="min-h-screen p-10">
-      <p className="font-sans text-sm uppercase tracking-[0.3em] text-[#B08D57]">
-        Luxury Within Reach
-      </p>
-
-      <h1 className="mt-4 text-6xl">
-        KK Store
-      </h1>
-
-      <p className="mt-6 max-w-lg leading-7">
-        Discover something beautiful.
-      </p>
+    <main>
+      <Hero />
+      <TrustBar />
+      <ShopByCategory />
+      <ProductShowcase />
+      <Philosophy />
+      <Testimonials />
+      <InstagramGallery />
+      <FAQ />
+      <Newsletter />
     </main>
   );
 }

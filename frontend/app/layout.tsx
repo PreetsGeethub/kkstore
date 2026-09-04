@@ -3,6 +3,8 @@ import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import Navbar from "../components/Navbar";
 import AnnouncementBar from "../components/AnnouncementBar";
+import { ToastProvider } from "@/components/Toast";
+import Footer from "@/components/Footer";
 const inter = Inter({
 
   variable: "--font-inter",
@@ -30,7 +32,8 @@ export default function RootLayout({
 <body className="min-h-full flex flex-col">
   <AnnouncementBar />
   <Navbar />
-  {children}
+  <ToastProvider>{children}</ToastProvider>
+  <Footer/>
 </body>
     </html>
   );

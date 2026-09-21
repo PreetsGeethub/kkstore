@@ -8,7 +8,7 @@ import { AuthProvider } from "@/components/Auth";
 import { CartProvider } from "@/components/Cart";
 import { WishlistProvider } from "@/components/Wishlist";
 import Footer from "@/components/Footer";
-
+import WhatsAppWidget from "@/components/WhatsAppWidget";
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
@@ -32,20 +32,21 @@ export default function RootLayout({
       lang="en"
       className={`${inter.variable} ${playfair.variable} antialiased`}
     >
-      <body className="min-h-full flex flex-col">
-        <ToastProvider>
-          <AuthProvider>
-            <CartProvider>
-              <WishlistProvider>
-                <AnnouncementBar />
-                <Navbar />
-                {children}
-                <Footer />
-              </WishlistProvider>
-            </CartProvider>
-          </AuthProvider>
-        </ToastProvider>
-      </body>
+     <body className="min-h-full flex flex-col">
+  <ToastProvider>
+    <AuthProvider>
+      <CartProvider>
+        <WishlistProvider>
+          <AnnouncementBar />
+          <Navbar />
+          {children}
+          <Footer />
+          <WhatsAppWidget />
+        </WishlistProvider>
+      </CartProvider>
+    </AuthProvider>
+  </ToastProvider>
+</body>
     </html>
   );
 }

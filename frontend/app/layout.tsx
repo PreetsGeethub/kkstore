@@ -4,9 +4,12 @@ import "./globals.css";
 import Navbar from "../components/Navbar";
 import AnnouncementBar from "../components/AnnouncementBar";
 import { ToastProvider } from "@/components/Toast";
+import { AuthProvider } from "@/components/Auth";
+import { CartProvider } from "@/components/Cart";
+import { WishlistProvider } from "@/components/Wishlist";
 import Footer from "@/components/Footer";
-const inter = Inter({
 
+const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
 });
@@ -29,12 +32,20 @@ export default function RootLayout({
       lang="en"
       className={`${inter.variable} ${playfair.variable} antialiased`}
     >
-<body className="min-h-full flex flex-col">
-  <AnnouncementBar />
-  <Navbar />
-  <ToastProvider>{children}</ToastProvider>
-  <Footer/>
-</body>
+      <body className="min-h-full flex flex-col">
+        <ToastProvider>
+          <AuthProvider>
+            <CartProvider>
+              <WishlistProvider>
+                <AnnouncementBar />
+                <Navbar />
+                {children}
+                <Footer />
+              </WishlistProvider>
+            </CartProvider>
+          </AuthProvider>
+        </ToastProvider>
+      </body>
     </html>
   );
-} 
+}

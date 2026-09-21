@@ -50,7 +50,7 @@ export const createReview = async (userId, reviewData) => {
     const paidOrder = await prisma.order.findFirst({
         where: {
             userId,
-            status: OrderStatus.PAID,
+            status: OrderStatus.CONFIRMED, 
             orderItems: {
                 some: {
                     variant: {

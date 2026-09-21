@@ -1,12 +1,19 @@
-import asyncHandler from "../utils/asyncHandler.js";
+﻿import asyncHandler from "../utils/asyncHandler.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import ApiError from "../utils/ApiError.js";
-import { registerUser, loginUser, logoutUser, refreshUserToken ,completeGoogleProfile} from "../services/auth.service.js";
+import { registerUser, loginUser, logoutUser, refreshUserToken, completeGoogleProfile } from "../services/auth.service.js";
 import {
     accessTokenOptions,
     refreshTokenOptions,
 } from "../utils/cookieOptions.js";
-import { generateProfileCompletionToken,verifyProfileCompletionToken } from "../utils/token.js";
+import {
+    generateAccessToken,
+    generateRefreshToken,
+    generateProfileCompletionToken,
+    verifyProfileCompletionToken,
+} from "../utils/token.js";
+import prisma from "../config/prisma.js";
+
 export const register = asyncHandler(async (req, res) => {
     const userData = req.validated.body;
 
@@ -22,20 +29,18 @@ export const register = asyncHandler(async (req, res) => {
 });
 
 export const login = asyncHandler(async (req, res) => {
-    // const {indentifier, password} = req.body;
-    const { user, accessToken, refreshToken }  =  await loginUser(req.validated.body);
-      
+    const { user, accessToken, refreshToken } = await loginUser(req.validated.body);
 
     return res
-    .cookie("accessToken",accessToken,accessTokenOptions)
-    .cookie("refreshToken",refreshToken,refreshTokenOptions)
-    .status(200).json(
-        new  ApiResponse(
-            200,
-            "User logged in successfully.",
-            user
-        )
-    );
+        .cookie("accessToken", accessToken, accessTokenOptions)
+        .cookie("refreshToken", refreshToken, refreshTokenOptions)
+        .status(200).json(
+            new ApiResponse(
+                200,
+                "User logged in successfully.",
+                user
+            )
+        );
 });
 
 export const getCurrentUser = asyncHandler(async (req, res) => {
@@ -66,26 +71,30 @@ export const logout = asyncHandler(async (req, res) => {
 export const googleCallback = asyncHandler(async (req, res) => {
     const user = req.user;
 
+    const frontendUrl = process.env.FRONTEND_URL;
+
     if (!user.phone) {
         const profileCompletionToken =
             generateProfileCompletionToken(user);
 
-        return res.status(200).json(
-            new ApiResponse(
-                200,
-                "Phone number is required to complete your profile.",
-                {
-                    requiresProfileCompletion: true,
-                    profileCompletionToken,
-                    
-                }
-            )
+        return res.redirect(
+            `${frontendUrl}/auth/google/complete-profile?token=${profileCompletionToken}`
         );
     }
 
-    // Normal Google login will go here later.
-});
+    const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
 
+    await prisma.user.update({
+        where: { id: user.id },
+        data: { refreshToken },
+    });
+
+    return res
+        .cookie("accessToken", accessToken, accessTokenOptions)
+        .cookie("refreshToken", refreshToken, refreshTokenOptions)
+        .redirect(`${frontendUrl}/account`);
+});
 
 export const completeGoogleProfileController = asyncHandler(
     async (req, res) => {
@@ -125,14 +134,13 @@ export const completeGoogleProfileController = asyncHandler(
     }
 );
 
-
 export const refresh = asyncHandler(async (req, res) => {
     const refreshToken = req.cookies.refreshToken;
     const {
         accessToken,
         refreshToken: newRefreshToken,
     } = await refreshUserToken(refreshToken);
-   
+
     return res
         .cookie(
             "accessToken",

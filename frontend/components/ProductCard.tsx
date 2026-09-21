@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Heart, ShoppingBag } from "lucide-react";
-import { useToast } from "./Toast";
+import { useWishlist } from "./Wishlist";
 
 export type Product = {
   id: string;
@@ -23,8 +23,9 @@ type ProductCardProps = {
 };
 
 export default function ProductCard({ product, priority = false }: ProductCardProps) {
-  const [wishlisted, setWishlisted] = useState(false);
-  const { showToast } = useToast();
+  const { toggleItem, isWishlisted } = useWishlist();
+  const wishlisted = isWishlisted(product.id);
+  const router = useRouter();
 
   const hasDiscount =
     product.discountPrice !== undefined && product.discountPrice < product.price;
@@ -33,33 +34,26 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
     ? Math.round(((product.price - product.discountPrice!) / product.price) * 100)
     : 0;
 
-  const toggleWishlist = (e: React.MouseEvent) => {
+  const handleWishlistClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    setWishlisted((prev) => {
-      const next = !prev;
-      showToast({
-        variant: next ? "success" : "info",
-        title: next ? "Added to wishlist" : "Removed from wishlist",
-        description: product.name,
-      });
-      return next;
+    toggleItem({
+      productId: product.id,
+      name: product.name,
+      image: product.image,
+      price: product.discountPrice ?? product.price,
+      comparePrice: product.discountPrice ? product.price : undefined,
     });
-    // TODO: wire up to real wishlist store/API
   };
 
   const handleQuickAdd = (e: React.MouseEvent) => {
     e.preventDefault();
-    showToast({
-      variant: "cart",
-      title: "Added to cart",
-      description: product.name,
-    });
-    // TODO: wire up actual cart state/API
+    // Sends the customer to pick a real color/size, since a grid card
+    // has no variant selection — avoids silently adding a wrong/fake variant.
+    router.push(`/products/${product.id}`);
   };
 
   return (
     <Link href={`/products/${product.id}`} className="group block">
-      {/* Image */}
       <div className="relative aspect-[3/4] overflow-hidden bg-[#E8D8C5]">
         <Image
           src={product.image}
@@ -82,7 +76,6 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
           />
         )}
 
-        {/* Badges */}
         <div className="absolute left-3 top-3 flex flex-col gap-1.5">
           {product.isNew && (
             <span className="bg-[#2A1E17] px-2.5 py-1 text-[9px] font-medium uppercase tracking-[0.15em] text-white">
@@ -96,11 +89,10 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
           )}
         </div>
 
-        {/* Wishlist */}
         <button
           type="button"
           aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
-          onClick={toggleWishlist}
+          onClick={handleWishlistClick}
           className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center border border-white/50 bg-white/20 text-white backdrop-blur-sm transition-colors duration-300 hover:bg-white/30"
         >
           <Heart
@@ -110,19 +102,17 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
           />
         </button>
 
-        {/* Quick add — always visible on mobile, hover-reveal on desktop */}
         <button
           type="button"
-          aria-label="Quick add to cart"
+          aria-label="Select options"
           onClick={handleQuickAdd}
           className="absolute inset-x-3 bottom-3 flex items-center justify-center gap-2 bg-[#FAF7F2] py-2.5 text-[10px] font-medium uppercase tracking-[0.2em] text-[#2A1E17] transition-all duration-300 lg:translate-y-2 lg:opacity-0 lg:group-hover:translate-y-0 lg:group-hover:opacity-100"
         >
           <ShoppingBag size={13} strokeWidth={1.5} />
-          Add to Cart
+          Select Options
         </button>
       </div>
 
-      {/* Info */}
       <div className="mt-3 space-y-1">
         <p className="font-sans text-sm text-[#2A1E17]">{product.name}</p>
 

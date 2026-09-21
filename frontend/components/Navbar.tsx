@@ -1,8 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams, useRouter } from "next/navigation";
+import { useCart } from "./Cart";
+import { useWishlist } from "./Wishlist";
+import { useAuth } from "./Auth";
 import { useEffect, useState } from "react";
+import { getCategories, type Category } from "@/lib/categoryApi";
+
 import {
   Search,
   Heart,
@@ -17,33 +22,7 @@ import {
 const navLinks = [
   { href: "/", label: "Home" },
   { href: "/products", label: "Collections" },
-  {
-    href: "/products?sort=newest",
-    label: "New Arrivals",
-  },
-];
-
-const collections = [
-  {
-    name: "Necklaces",
-    href: "/products?category=necklaces",
-    image: "/collections/necklaces.jpg",
-  },
-  {
-    name: "Bracelets",
-    href: "/products?category=bracelets",
-    image: "/collections/bracelets.jpg",
-  },
-  {
-    name: "Earrings",
-    href: "/products?category=earrings",
-    image: "/collections/earrings.jpg",
-  },
-  {
-    name: "Rings",
-    href: "/products?category=rings",
-    image: "/collections/rings.jpg",
-  },
+  { href: "/products?sort=newest", label: "New Arrivals" },
 ];
 
 const iconButton =
@@ -58,13 +37,31 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [collectionsOpen, setCollectionsOpen] = useState(false);
+  const [collections, setCollections] = useState<Category[]>([]);
 
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { itemCount } = useCart();
+  const { itemCount: wishlistCount } = useWishlist();
+  const { user } = useAuth();
+  const cartCount = itemCount;
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const router = useRouter(); // add useRouter import from next/navigation if not already there
 
-  // Temporary values until real store state is connected.
-  const wishlistCount = 0;
-  const cartCount = 0;
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchOpen(false);
+      setSearchQuery("");
+    }
+  };
+  useEffect(() => {
+    getCategories()
+      .then(setCollections)
+      .catch(() => setCollections([]));
+  }, []);
 
   // FIX #1: distinguish "New Arrivals" (/products?sort=newest) from
   // "Collections" (/products and everything else under it) since
@@ -138,11 +135,10 @@ export default function Navbar() {
   return (
     <>
       <header
-        className={`sticky top-0 z-50 h-16 transition-all duration-300 md:h-20 ${
-          scrolled
+        className={`sticky top-0 z-50 h-16 transition-all duration-300 md:h-20 ${scrolled
             ? "bg-[#FAF7F2]/95 shadow-[0_1px_0_0_#E8D8C5] backdrop-blur-md"
             : "bg-[#FAF7F2]"
-        }`}
+          }`}
       >
         <nav className="mx-auto grid h-full max-w-7xl grid-cols-[auto_1fr_auto] items-center gap-4 px-4 sm:px-6 lg:px-8">
           {/* Logo */}
@@ -162,9 +158,8 @@ export default function Navbar() {
             >
               Home
               <span
-                className={`absolute bottom-0 left-0 h-px bg-[#B08D57] transition-all duration-300 ${
-                  isActive("/") ? "w-full" : "w-0 group-hover:w-full"
-                }`}
+                className={`absolute bottom-0 left-0 h-px bg-[#B08D57] transition-all duration-300 ${isActive("/") ? "w-full" : "w-0 group-hover:w-full"
+                  }`}
               />
             </Link>
 
@@ -190,24 +185,21 @@ export default function Navbar() {
                 <ChevronDown
                   size={13}
                   strokeWidth={1.5}
-                  className={`transition-transform duration-300 ${
-                    collectionsOpen ? "rotate-180" : ""
-                  }`}
+                  className={`transition-transform duration-300 ${collectionsOpen ? "rotate-180" : ""
+                    }`}
                 />
                 <span
-                  className={`absolute bottom-0 left-0 h-px bg-[#B08D57] transition-all duration-300 ${
-                    isCollectionsActive ? "w-full" : "w-0 group-hover:w-full"
-                  }`}
+                  className={`absolute bottom-0 left-0 h-px bg-[#B08D57] transition-all duration-300 ${isCollectionsActive ? "w-full" : "w-0 group-hover:w-full"
+                    }`}
                 />
               </button>
 
               {/* Mega menu */}
               <div
-                className={`fixed left-0 top-16 hidden w-full transition-all duration-300 md:top-20 lg:block ${
-                  collectionsOpen
+                className={`fixed left-0 top-16 hidden w-full transition-all duration-300 md:top-20 lg:block ${collectionsOpen
                     ? "pointer-events-auto visible opacity-100"
                     : "pointer-events-none invisible opacity-0"
-                }`}
+                  }`}
                 onMouseEnter={() => setCollectionsOpen(true)}
                 onMouseLeave={() => setCollectionsOpen(false)}
               >
@@ -237,8 +229,8 @@ export default function Navbar() {
                       <div className="grid grid-cols-4 gap-6">
                         {collections.map((collection) => (
                           <Link
-                            key={collection.name}
-                            href={collection.href}
+                            key={collection.id}
+                            href={`/products?category=${collection.id}`}
                             className="group"
                           >
                             <div className="aspect-[3/4] overflow-hidden bg-[#FAF7F2]">
@@ -272,11 +264,11 @@ export default function Navbar() {
 
                       <Link href="/products" className="group block">
                         <div className="aspect-[4/5] overflow-hidden bg-[#FAF7F2]">
-                          <img
-                            src="/products/featured.jpg"
-                            alt="Featured KK Store product"
-                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-                          />
+                        <img
+  src="https://images.unsplash.com/photo-1573408301185-9146fe634ad0?q=80&w=800&auto=format&fit=crop"
+  alt="Featured KK Store product"
+  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+/>
                         </div>
 
                         <div className="mt-4 flex items-center justify-between">
@@ -308,9 +300,8 @@ export default function Navbar() {
             >
               New Arrivals
               <span
-                className={`absolute bottom-0 left-0 h-px bg-[#B08D57] transition-all duration-300 ${
-                  isNewArrivals ? "w-full" : "w-0 group-hover:w-full"
-                }`}
+                className={`absolute bottom-0 left-0 h-px bg-[#B08D57] transition-all duration-300 ${isNewArrivals ? "w-full" : "w-0 group-hover:w-full"
+                  }`}
               />
             </Link>
           </div>
@@ -320,6 +311,7 @@ export default function Navbar() {
             <button
               type="button"
               aria-label="Search"
+              onClick={() => setSearchOpen((v) => !v)}
               className={`hidden ${iconButton} sm:flex`}
             >
               <Search size={16} strokeWidth={1.5} />
@@ -339,13 +331,12 @@ export default function Navbar() {
             </Link>
 
             <Link
-              href="/account"
+              href={user ? "/account" : "/login"}
               aria-label="Account"
               className={`hidden ${iconButton} sm:flex`}
             >
               <User size={16} strokeWidth={1.5} />
             </Link>
-
             <Link
               href="/cart"
               aria-label={`Cart${cartCount > 0 ? `, ${cartCount} items` : ""}`}
@@ -375,22 +366,46 @@ export default function Navbar() {
           </div>
         </nav>
       </header>
+      {/* Search overlay */}
+<div
+  className={`fixed inset-x-0 top-16 z-40 overflow-hidden border-b border-[#E8D8C5] bg-[#FAF7F2] transition-all duration-300 md:top-20 ${
+    searchOpen ? "max-h-20 opacity-100" : "max-h-0 opacity-0"
+  }`}
+>
+  <form onSubmit={handleSearchSubmit} className="mx-auto flex max-w-2xl items-center gap-3 px-6 py-4">
+    <Search size={18} strokeWidth={1.5} className="shrink-0 text-[#B08D57]" />
+    <input
+      type="text"
+      value={searchQuery}
+      onChange={(e) => setSearchQuery(e.target.value)}
+      placeholder="Search for necklaces, rings, earrings..."
+      autoFocus={searchOpen}
+      className="flex-1 bg-transparent font-sans text-sm text-[#2A1E17] outline-none placeholder:text-[#4A4A4A]"
+    />
+    <button
+      type="button"
+      onClick={() => setSearchOpen(false)}
+      aria-label="Close search"
+      className="shrink-0 text-[#4A4A4A] hover:text-[#2A1E17]"
+    >
+      <X size={16} strokeWidth={1.5} />
+    </button>
+  </form>
+</div>
 
       {/* Mobile backdrop */}
       <div
         aria-hidden="true"
         onClick={() => setMenuOpen(false)}
-        className={`fixed inset-0 z-40 bg-[#2A1E17]/40 backdrop-blur-sm transition-opacity duration-300 lg:hidden ${
-          menuOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
-        }`}
+        className={`fixed inset-0 z-40 bg-[#2A1E17]/40 backdrop-blur-sm transition-opacity duration-300 lg:hidden ${menuOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
+          }`}
       />
 
       {/* Mobile drawer */}
       <aside
         aria-label="Mobile navigation"
-        className={`fixed right-0 top-0 z-50 h-full w-[82%] max-w-sm transform bg-[#FAF7F2] shadow-xl transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] lg:hidden ${
-          menuOpen ? "translate-x-0" : "translate-x-full"
-        }`}
+        className={`fixed right-0 top-0 z-50 h-full w-[82%] max-w-sm transform bg-[#FAF7F2] shadow-xl transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] lg:hidden ${menuOpen ? "translate-x-0" : "translate-x-full"
+          }`}
       >
         <div className="flex h-16 items-center justify-between border-b border-[#E8D8C5] px-6 md:h-20">
           <span className="font-[var(--font-playfair)] text-lg text-[#2A1E17]">
@@ -417,9 +432,8 @@ export default function Navbar() {
                 style={{
                   transitionDelay: menuOpen ? `${index * 60}ms` : "0ms",
                 }}
-                className={`block border-b border-[#E8D8C5] py-4 font-sans text-xs uppercase tracking-[0.25em] transition-all duration-300 ${
-                  active ? "text-[#B08D57]" : "text-[#2A1E17]"
-                } ${menuOpen ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"}`}
+                className={`block border-b border-[#E8D8C5] py-4 font-sans text-xs uppercase tracking-[0.25em] transition-all duration-300 ${active ? "text-[#B08D57]" : "text-[#2A1E17]"
+                  } ${menuOpen ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"}`}
               >
                 {link.label}
               </Link>
@@ -444,12 +458,16 @@ export default function Navbar() {
             </Link>
 
             <button
-              type="button"
-              className="flex items-center gap-3 font-sans text-xs uppercase tracking-[0.25em] text-[#2A1E17]"
-            >
-              <Search size={16} strokeWidth={1.5} />
-              Search
-            </button>
+  type="button"
+  onClick={() => {
+    setMenuOpen(false);
+    setSearchOpen(true);
+  }}
+  className="flex items-center gap-3 font-sans text-xs uppercase tracking-[0.25em] text-[#2A1E17]"
+>
+  <Search size={16} strokeWidth={1.5} />
+  Search
+</button>
           </div>
         </div>
       </aside>

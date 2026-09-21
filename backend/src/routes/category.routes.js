@@ -32,7 +32,6 @@ router.post(
 
 router.get(
     "/",
-    protect,
     validate(getCategoriesSchema, "query"),
     getAllCategory
 );

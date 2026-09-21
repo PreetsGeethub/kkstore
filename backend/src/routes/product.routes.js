@@ -33,14 +33,12 @@ router.post(
 
 router.get(
     "/",
-    protect,
     validate(getProductsSchema, "query"),
     getAll
 );
 
 router.get(
     "/:id",
-    protect,
     validate(getProductByIdSchema, "params"),
     getById
 );

@@ -19,6 +19,7 @@ import adminOrderRoutes from "./routes/adminOrder.routes.js";
 import adminCouponRoutes from "./routes/adminCoupon.routes.js";
 import adminReviewRoutes from "./routes/adminReview.routes.js";
 import adminInventoryRoutes from "./routes/adminInventory.routes.js";
+import uploadRoutes from "./routes/upload.routes.js";
 import cookieParser from "cookie-parser";
 const app = express();
 
@@ -34,7 +35,12 @@ app.use(
 
 
 app.use(express.json());
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+  })
+);
 app.use(helmet());
 app.use(morgan("dev"));
 app.use(cookieParser());
@@ -61,6 +67,7 @@ app.use("/api/v1/coupons", couponRoutes);
 app.use("/api/v1/admin/orders", adminOrderRoutes);
 app.use("/api/v1/admin/coupons", adminCouponRoutes);
 app.use("/api/v1/admin/reviews", adminReviewRoutes);
+app.use("/api/v1/upload", uploadRoutes);
 app.use(
   "/api/v1/admin/inventory",
   adminInventoryRoutes

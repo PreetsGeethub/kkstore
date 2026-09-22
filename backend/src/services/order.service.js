@@ -1,4 +1,4 @@
-import { Prisma, OrderStatus } from "@prisma/client";
+import { Prisma, OrderStatus } from "../../generated/prisma/index.js";
 import prisma from "../config/prisma.js";
 import ApiError from "../utils/ApiError.js";
 import { includes } from "zod";

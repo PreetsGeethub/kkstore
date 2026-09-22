@@ -1,0 +1,13 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: kkstore-backend
+
+    env_file:
+      - .env.docker
+
+    ports:
+      - "5000:5000"

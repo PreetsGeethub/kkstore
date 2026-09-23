@@ -19,7 +19,7 @@ jobs:
         run: |
           node --version
           npm --version
-      -name: install dependecies
+      - name: install dependecies
         run: |
           npm ci
           working-directory: backend

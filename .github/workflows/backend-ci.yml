@@ -10,8 +10,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
 
-      - name: Say hello
-        run: echo "KK Store backend CI is running!"
+      - name: Check Node and npm
+        run: |
+          node --version
+          npm --version

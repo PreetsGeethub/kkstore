@@ -7,6 +7,8 @@ WORKDIR /app
 # Copy package files first
 COPY package*.json ./
 
+# Install OpenSSL required by Prisma
+RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 # Install production dependencies
 RUN npm ci --omit=dev
 

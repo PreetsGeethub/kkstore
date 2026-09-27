@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useEffect, useState } from "react";
+import type { ProductListItem } from "@/lib/types";
 import Link from "next/link";
 import { Loader2, Pencil, Trash2, Plus } from "lucide-react";
 import { getProducts } from "@/lib/productApi";
@@ -9,9 +10,9 @@ import { useToast } from "@/components/Toast";
 
 export default function AdminProductsPage() {
   const { showToast } = useToast();
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState<ProductListItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [deletingId, setDeletingId] = useState(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const load = () => {
     getProducts({ status: "all", limit: 100 })
@@ -24,7 +25,7 @@ export default function AdminProductsPage() {
     load();
   }, []);
 
-  const handleDelete = async (id, name) => {
+  const handleDelete = async (id: string, name: string) => {
     if (!confirm(`Delete "${name}"? This can not be undone from here.`)) return;
 
     setDeletingId(id);

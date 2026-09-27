@@ -90,7 +90,8 @@ export default function EditProductPage() {
     }).finally(() => setLoading(false));
   }, [productId]);
 
-  const updateField = (field, value) => setForm((prev) => ({ ...prev, [field]: value }));
+  const updateField = <K extends keyof ProductForm>(field: K, value: ProductForm[K]) =>
+    setForm((prev) => ({ ...prev, [field]: value }));
 
   const addImage = () => setImages((prev) => [...prev, { imageUrl: "", sortOrder: prev.length }]);
   const removeImage = (index: number) => setImages((prev) => prev.filter((_, i) => i !== index));
@@ -149,6 +150,7 @@ export default function EditProductPage() {
     };
 
     try {
+      if (!productId) return;
       await updateProduct(productId, payload);
       showToast({ variant: "success", title: "Product updated", description: form.name });
       router.push("/admin/products");

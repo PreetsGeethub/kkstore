@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useCart } from "./Cart";
 import { useWishlist } from "./Wishlist";
@@ -24,6 +25,7 @@ type ProductDetailProps = {
 
 export default function ProductDetail({ product }: ProductDetailProps) {
   const { showToast } = useToast();
+  const router = useRouter();
 
   const sortedImages = useMemo(
     () => [...product.images].sort((a, b) => a.sortOrder - b.sortOrder),

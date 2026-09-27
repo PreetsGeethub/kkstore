@@ -2,7 +2,7 @@
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api/v1";
 
-export async function createAddress(address) {
+export async function createAddress(address: Record<string, unknown>) {
   const res = await apiFetch(`${BASE_URL}/addresses`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -11,7 +11,7 @@ export async function createAddress(address) {
   if (!res.ok) {
     const err = await res.json().catch(() => null);
     if (err?.errors?.length > 0) {
-      throw new Error(err.errors.map((e) => e.message).join(" - "));
+      throw new Error(err.errors.map((e: { message: string }) => e.message).join(" - "));
     }
     throw new Error(err?.message ?? "Failed to save address");
   }
@@ -19,7 +19,7 @@ export async function createAddress(address) {
   return data.id ?? data.address?.id ?? data.data?.id;
 }
 
-export async function addToServerCart(variantId, quantity) {
+export async function addToServerCart(variantId: string, quantity: number) {
   const res = await apiFetch(`${BASE_URL}/cart`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -29,14 +29,14 @@ export async function addToServerCart(variantId, quantity) {
   return res.json();
 }
 
-export async function getOrder(orderId) {
+export async function getOrder(orderId: string) {
   const res = await apiFetch(`${BASE_URL}/orders/${orderId}`, { cache: "no-store" });
   if (!res.ok) throw new Error("Failed to fetch order");
   const json = await res.json();
   return json.data ?? json;
 }
 
-export async function createOrder(params) {
+export async function createOrder(params: Record<string, unknown>) {
   const res = await apiFetch(`${BASE_URL}/orders`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -50,7 +50,7 @@ export async function createOrder(params) {
   return data.data?.id ?? data.id;
 }
 
-export async function createPayment(orderId) {
+export async function createPayment(orderId: string) {
   const res = await apiFetch(`${BASE_URL}/payments`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -64,7 +64,7 @@ export async function createPayment(orderId) {
   return json.data ?? json;
 }
 
-export async function validateCoupon(code, subtotal) {
+export async function validateCoupon(code: string, subtotal: number) {
   const res = await apiFetch(`${BASE_URL}/coupons/validate`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -77,7 +77,7 @@ export async function validateCoupon(code, subtotal) {
   return res.json();
 }
 
-export async function verifyPayment(data) {
+export async function verifyPayment(data: Record<string, unknown>) {
   const res = await apiFetch(`${BASE_URL}/payments/verify`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

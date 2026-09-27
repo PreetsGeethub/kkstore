@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle2, Package, ArrowRight, Loader2 } from "lucide-react";
@@ -34,6 +34,14 @@ type OrderDetails = {
 };
 
 export default function OrderConfirmationPage() {
+  return (
+    <Suspense fallback={null}>
+      <OrderConfirmationPageContent />
+    </Suspense>
+  );
+}
+
+function OrderConfirmationPageContent() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get("orderId");
 

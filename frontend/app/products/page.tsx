@@ -4,6 +4,8 @@ import { getCategories } from "@/lib/adminApi"; // already exists and works
 import { listItemToCardProduct } from "@/lib/adapters";
 import ProductCard from "@/components/ProductCard";
 
+type Category = { id: string; name: string };
+
 export default async function ProductsPage({
   searchParams,
 }: {
@@ -22,10 +24,11 @@ export default async function ProductsPage({
       sortBy: sort ? sortMap[sort]?.sortBy : undefined,
       order: sort ? sortMap[sort]?.order : undefined,
     }),
-    getCategories().catch(() => []),
+    getCategories().catch((): Category[] => []),
   ]);
 
-  const activeCategory = categories.find((c) => c.id === category);
+  const typedCategories = categories as Category[];
+  const activeCategory = typedCategories.find((c) => c.id === category);
   const products = apiProducts.map(listItemToCardProduct);
 
   return (
@@ -60,7 +63,7 @@ export default async function ProductsPage({
               >
                 All Products
               </Link>
-              {categories.map((cat) => (
+              {typedCategories.map((cat) => (
                 <Link
                   key={cat.id}
                   href={`/products?category=${cat.id}`}

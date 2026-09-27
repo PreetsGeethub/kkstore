@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { useToast } from "@/components/Toast";
@@ -8,6 +8,14 @@ import { useToast } from "@/components/Toast";
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api";
 
 export default function CompleteGoogleProfilePage() {
+  return (
+    <Suspense fallback={null}>
+      <CompleteGoogleProfilePageContent />
+    </Suspense>
+  );
+}
+
+function CompleteGoogleProfilePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");

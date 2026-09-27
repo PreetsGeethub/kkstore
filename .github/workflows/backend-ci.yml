@@ -54,3 +54,16 @@ jobs:
           tags: |
             ghcr.io/preetsgeethub/kkstore-backend:latest
             ghcr.io/preetsgeethub/kkstore-backend:${{ github.sha }}
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.2.5
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u preetsgeethub --password-stdin
+            cd ~/kkstore/backend
+            docker compose pull
+            docker compose up -d
+            docker image prune -f

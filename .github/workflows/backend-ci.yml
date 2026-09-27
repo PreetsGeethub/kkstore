@@ -64,6 +64,7 @@ jobs:
           script: |
             echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u preetsgeethub --password-stdin
             cd ~/kkstore/backend
+            git pull origin main
             docker compose pull
             docker compose up -d
             docker image prune -f

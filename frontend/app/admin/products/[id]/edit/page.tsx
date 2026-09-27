@@ -6,6 +6,14 @@ import { Plus, Trash2, Loader2 } from "lucide-react";
 import { getProductById } from "@/lib/productApi";
 import { getCategories, updateProduct } from "@/lib/adminApi";
 import { useToast } from "@/components/Toast";
+import type { ChangeEvent } from "react";
+
+type Category = { id: string; name: string };
+type ProductForm = {
+  name: string; description: string; categoryId: string; material: string; careInstructions: string; gifUrl: string;
+  isAntiTarnish: boolean; isWaterproof: boolean; isSkinFriendly: boolean; isFeatured: boolean; isBestSeller: boolean; isNewArrival: boolean;
+};
+type VariantForm = { sku: string; color: string; size: string; price: number; comparePrice?: number; stock: number };
 
 const emptyVariant = { sku: "", color: "", size: "", price: 0, comparePrice: undefined, stock: 0 };
 
@@ -15,11 +23,11 @@ export default function EditProductPage() {
   const router = useRouter();
   const { showToast } = useToast();
 
-  const [categories, setCategories] = useState([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<ProductForm>({
     name: "",
     description: "",
     categoryId: "",
@@ -35,7 +43,7 @@ export default function EditProductPage() {
   });
 
   const [images, setImages] = useState([{ imageUrl: "", sortOrder: 0 }]);
-  const [variants, setVariants] = useState([{ ...emptyVariant }]);
+  const [variants, setVariants] = useState<VariantForm[]>([{ ...emptyVariant }]);
 
   useEffect(() => {
     Promise.all([getProductById(productId), getCategories().catch(() => [])]).then(
@@ -272,7 +280,7 @@ export default function EditProductPage() {
   );
 }
 
-function TextField({ label, value, onChange, required = false }) {
+function TextField({ label, value, onChange, required = false }: { label: string; value: string; onChange: (value: string) => void; required?: boolean }) {
   return (
     <label className="block">
       <span className="mb-1.5 block font-sans text-xs text-[#2A1E17]">{label}{required && " *"}</span>
@@ -286,7 +294,7 @@ function TextField({ label, value, onChange, required = false }) {
   );
 }
 
-function TextArea({ label, value, onChange, required = false }) {
+function TextArea({ label, value, onChange, required = false }: { label: string; value: string; onChange: (value: string) => void; required?: boolean }) {
   return (
     <label className="block">
       <span className="mb-1.5 block font-sans text-xs text-[#2A1E17]">{label}{required && " *"}</span>
@@ -300,7 +308,7 @@ function TextArea({ label, value, onChange, required = false }) {
   );
 }
 
-function Checkbox({ label, checked, onChange }) {
+function Checkbox({ label, checked, onChange }: { label: string; checked: boolean; onChange: (value: boolean) => void }) {
   return (
     <label className="flex items-center gap-2 font-sans text-xs text-[#2A1E17]">
       <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />

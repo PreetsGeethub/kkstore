@@ -31,7 +31,9 @@ export type ProductListItem = {
   export type ProductReview = {
     id: string;
     rating: number;
+    title: string;
     comment: string;
+    isVerifiedPurchase: boolean;
     createdAt: string;
     user: { id: string; firstName: string; lastName: string };
   };

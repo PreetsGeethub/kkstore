@@ -2,7 +2,7 @@
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api/v1";
 
-export async function registerUser(data) {
+export async function registerUser(data: Record<string, unknown>) {
   const res = await fetch(`${BASE_URL}/auth/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -16,7 +16,7 @@ export async function registerUser(data) {
   return res.json();
 }
 
-export async function loginUser(identifier, password) {
+export async function loginUser(identifier: string, password: string) {
   const res = await fetch(`${BASE_URL}/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

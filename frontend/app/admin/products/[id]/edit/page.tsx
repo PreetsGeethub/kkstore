@@ -19,7 +19,7 @@ const emptyVariant = { sku: "", color: "", size: "", price: 0, comparePrice: und
 
 export default function EditProductPage() {
   const params = useParams();
-  const productId = params.id;
+  const productId = typeof params.id === "string" ? params.id : undefined;
   const router = useRouter();
   const { showToast } = useToast();
 
@@ -46,6 +46,8 @@ export default function EditProductPage() {
   const [variants, setVariants] = useState<VariantForm[]>([{ ...emptyVariant }]);
 
   useEffect(() => {
+    if (!productId) { setLoading(false); return; }
+
     Promise.all([getProductById(productId), getCategories().catch(() => [])]).then(
       ([product, cats]) => {
         setCategories(cats);
@@ -91,13 +93,13 @@ export default function EditProductPage() {
   const updateField = (field, value) => setForm((prev) => ({ ...prev, [field]: value }));
 
   const addImage = () => setImages((prev) => [...prev, { imageUrl: "", sortOrder: prev.length }]);
-  const removeImage = (index) => setImages((prev) => prev.filter((_, i) => i !== index));
-  const updateImage = (index, value) =>
+  const removeImage = (index: number) => setImages((prev) => prev.filter((_, i) => i !== index));
+  const updateImage = (index: number, value: string) =>
     setImages((prev) => prev.map((img, i) => (i === index ? { ...img, imageUrl: value } : img)));
 
   const addVariant = () => setVariants((prev) => [...prev, { ...emptyVariant }]);
-  const removeVariant = (index) => setVariants((prev) => prev.filter((_, i) => i !== index));
-  const updateVariant = (index, field, value) =>
+  const removeVariant = (index: number) => setVariants((prev) => prev.filter((_, i) => i !== index));
+  const updateVariant = (index: number, field: keyof VariantForm, value: string | number | undefined) =>
     setVariants((prev) => prev.map((v, i) => (i === index ? { ...v, [field]: value } : v)));
 
   const isValid = () => {
@@ -118,7 +120,7 @@ export default function EditProductPage() {
     );
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!isValid()) {

@@ -25,7 +25,7 @@ export default async function ProductsPage({
     getCategories().catch(() => []),
   ]);
 
-  const activeCategory = categories.find((c: any) => c.id === category);
+  const activeCategory = categories.find((c) => c.id === category);
   const products = apiProducts.map(listItemToCardProduct);
 
   return (
@@ -60,7 +60,7 @@ export default async function ProductsPage({
               >
                 All Products
               </Link>
-              {categories.map((cat: any) => (
+              {categories.map((cat) => (
                 <Link
                   key={cat.id}
                   href={`/products?category=${cat.id}`}

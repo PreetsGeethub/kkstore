@@ -3,14 +3,16 @@ import type { ProductListItem, ApiProduct } from "./types";
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api/v1";
 
 export async function getProducts(params?: {
+  search?: string;
   categoryId?: string;
   sortBy?: string;
   order?: "asc" | "desc";
   page?: number;
   limit?: number;
   status?: "active" | "all";
-}) {
+}): Promise<{ products: ProductListItem[]; pagination: unknown }> {
   const query = new URLSearchParams();
+  if (params?.search) query.set("search", params.search);
   if (params?.categoryId) query.set("categoryId", params.categoryId);
   if (params?.sortBy) query.set("sortBy", params.sortBy);
   if (params?.order) query.set("order", params.order);

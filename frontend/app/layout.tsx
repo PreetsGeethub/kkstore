@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import Navbar from "../components/Navbar";
@@ -38,7 +39,9 @@ export default function RootLayout({
       <CartProvider>
         <WishlistProvider>
           <AnnouncementBar />
-          <Navbar />
+          <Suspense fallback={null}>
+            <Navbar />
+          </Suspense>
           {children}
           <Footer />
           <WhatsAppWidget />

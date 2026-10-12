@@ -10,6 +10,7 @@ import { CartProvider } from "@/components/Cart";
 import { WishlistProvider } from "@/components/Wishlist";
 import Footer from "@/components/Footer";
 import WhatsAppWidget from "@/components/WhatsAppWidget";
+import AIAssistant from "@/components/AIAssistant";
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
@@ -33,23 +34,29 @@ export default function RootLayout({
       lang="en"
       className={`${inter.variable} ${playfair.variable} antialiased`}
     >
-     <body className="min-h-full flex flex-col">
-  <ToastProvider>
-    <AuthProvider>
-      <CartProvider>
-        <WishlistProvider>
-          <AnnouncementBar />
-          <Suspense fallback={null}>
-            <Navbar />
-          </Suspense>
-          {children}
-          <Footer />
-          <WhatsAppWidget />
-        </WishlistProvider>
-      </CartProvider>
-    </AuthProvider>
-  </ToastProvider>
-</body>
+
+      <body className="min-h-full flex flex-col">
+        <ToastProvider>
+          <AuthProvider>
+            <CartProvider>
+              <WishlistProvider>
+                <AnnouncementBar />
+
+                <Suspense fallback={null}>
+                  <Navbar />
+                </Suspense>
+
+                {children}
+
+                <Footer />
+                <WhatsAppWidget />
+                <AIAssistant />
+              </WishlistProvider>
+            </CartProvider>
+          </AuthProvider>
+        </ToastProvider>
+      </body>
+
     </html>
   );
 }

@@ -36,9 +36,12 @@ app.use(
 
 app.use(express.json());
 const allowedOrigins = [
+  process.env.CLIENT_URL,
   "https://kkstore.in",
   "https://www.kkstore.in",
+  "http://localhost:3000",
 ];
+
 
 app.use(
   cors({
@@ -52,6 +55,7 @@ app.use(
     credentials: true,
   })
 );
+
 app.use(helmet());
 app.use(morgan("dev"));
 app.use(cookieParser());

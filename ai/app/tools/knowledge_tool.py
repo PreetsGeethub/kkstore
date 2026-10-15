@@ -1,5 +1,9 @@
+import logging
+
 from app.rag.generation import generate_rag_response
 from app.rag.query_rewriter import rewrite_query
+
+logger = logging.getLogger(__name__)
 
 knowledge_search_tool = {
     "name": "knowledge_search",
@@ -36,7 +40,7 @@ async def knowledge_search(
         latest_user_message=latest_user_message or query,
         tool_query=query,
     )
-    print("REWRITTEN QUERY:", rewritten_query)
+    logger.debug("Knowledge search query rewritten")
 
     response = generate_rag_response(rewritten_query)
 

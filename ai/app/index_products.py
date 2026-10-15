@@ -2,51 +2,48 @@ import asyncio
 import uuid
 
 import httpx
-from sentence_transformers import SentenceTransformer
 from qdrant_client import QdrantClient
 from qdrant_client.models import PointStruct
 
+from app.config import BACKEND_URL, HTTP_TIMEOUT_SECONDS, QDRANT_API_KEY, QDRANT_URL
+from app.embeddings import model
+from app.qdrant_setup import ensure_collection
 
-BACKEND_URL = "http://localhost:5000"
 COLLECTION_NAME = "kkstore_products"
-
-model = SentenceTransformer("all-MiniLM-L6-v2")
-client = QdrantClient(url="http://localhost:6333")
+client = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY or None)
 
 
 async def fetch_product_list(http):
-    response = await http.get(
-        f"{BACKEND_URL}/api/v1/products",
-        params={
-            "page": 1,
-            "limit": 100,
-            "status": "active",
-        },
-    )
+    products = []
+    page = 1
 
-    response.raise_for_status()
+    while True:
+        response = await http.get(
+            f"{BACKEND_URL}/api/v1/products",
+            params={"page": page, "limit": 100, "status": "active"},
+        )
+        response.raise_for_status()
+        batch = response.json()["data"]["products"]
+        products.extend(batch)
 
-    return response.json()["data"]["products"]
+        if len(batch) < 100:
+            break
+        page += 1
+
+    return products
 
 
 async def fetch_product_details(http, product_id):
-    response = await http.get(
-        f"{BACKEND_URL}/api/v1/products/{product_id}"
-    )
-
+    response = await http.get(f"{BACKEND_URL}/api/v1/products/{product_id}")
     response.raise_for_status()
-
     return response.json()["data"]
 
 
 def build_product_text(product):
     category = product.get("category") or {}
-
     variants = product.get("variants") or []
-
     variants_text = "\n".join(
-        f"Color: {variant.get('color', '')}, "
-        f"Size: {variant.get('size', '')}"
+        f"Color: {variant.get('color', '')}, Size: {variant.get('size', '')}"
         for variant in variants
     )
 
@@ -66,84 +63,49 @@ Variants:
 
 
 async def main():
-    async with httpx.AsyncClient() as http:
+    ensure_collection()
+
+    async with httpx.AsyncClient(timeout=HTTP_TIMEOUT_SECONDS) as http:
         products = await fetch_product_list(http)
-
         print(f"Found {len(products)} products.")
-
         points = []
 
         for product_summary in products:
-            product_id = product_summary["id"]
-
-            product = await fetch_product_details(
-                http,
-                product_id,
-            )
+            product = await fetch_product_details(http, product_summary["id"])
+            variants = product.get("variants") or []
+            if not variants:
+                print(f"Skipped product without variants: {product.get('id')}")
+                continue
 
             product_text = build_product_text(product)
-
-            embedding = model.encode(
-                product_text
-            ).tolist()
-
-            point_id = str(
-                uuid.uuid5(
-                    uuid.NAMESPACE_URL,
-                    product_id,
-                )
-            )
+            images = product.get("images") or []
+            point_id = str(uuid.uuid5(uuid.NAMESPACE_URL, product["id"]))
 
             points.append(
                 PointStruct(
                     id=point_id,
-                    vector=embedding,
+                    vector=model.encode(product_text).tolist(),
                     payload={
-                        "product_id": product_id,
+                        "product_id": product["id"],
                         "name": product["name"],
                         "category": product["category"]["name"],
-                       "price": float(
-                        min(
-                            variant["price"]
-                            for variant in product["variants"]
-                        )
-                        ), 
-                        "stock": sum(
-                            variant["stock"]
-                            for variant in product["variants"]
-                        ),
-                        "is_waterproof": product.get(
-                            "isWaterproof",
-                            False,
-                        ),
-                        "is_anti_tarnish": product.get(
-                            "isAntiTarnish",
-                            False,
-                        ),
-                        "is_skin_friendly": product.get(
-                            "isSkinFriendly",
-                            False,
-                        ),
-                        "thumbnail": (
-                            product["images"][0]["imageUrl"]
-                            if product.get("images")
-                            else None
-                        ),
-                            # Metadata
-                            "source": "postgresql",
-                            "source_updated_at": product.get("updatedAt"),
+                        "price": float(min(v["price"] for v in variants)),
+                        "stock": sum(v["stock"] for v in variants),
+                        "is_waterproof": product.get("isWaterproof", False),
+                        "is_anti_tarnish": product.get("isAntiTarnish", False),
+                        "is_skin_friendly": product.get("isSkinFriendly", False),
+                        "thumbnail": images[0]["imageUrl"] if images else None,
+                        "source": "postgresql",
+                        "source_updated_at": product.get("updatedAt"),
                     },
                 )
             )
-
             print(f"Prepared: {product['name']}")
 
-    client.upsert(
-        collection_name=COLLECTION_NAME,
-        points=points,
-    )
+    if points:
+        client.upsert(collection_name=COLLECTION_NAME, points=points)
 
-    print(f"\nIndexed {len(points)} products successfully.")
+    print(f"Indexed {len(points)} products successfully.")
 
 
 if __name__ == "__main__":

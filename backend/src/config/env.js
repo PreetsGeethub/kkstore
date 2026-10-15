@@ -20,6 +20,7 @@ export const env = {
   GOOGLE_CALLBACK_URL: process.env.GOOGLE_CALLBACK_URL,
 
   CLIENT_URL: process.env.CLIENT_URL || "http://localhost:3000",
+  COOKIE_DOMAIN: process.env.COOKIE_DOMAIN || undefined,
 
   RAZORPAY_KEY_ID: process.env.RAZORPAY_KEY_ID,
   RAZORPAY_KEY_SECRET: process.env.RAZORPAY_KEY_SECRET,

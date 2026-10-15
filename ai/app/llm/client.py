@@ -1,14 +1,14 @@
 import ollama
 
-MODEL_NAME = "qwen3:4b"
+from app.config import OLLAMA_BASE_URL, OLLAMA_MODEL
+
+client = ollama.Client(host=OLLAMA_BASE_URL)
 
 
 def ask_ollama(messages, tools=None):
-    response = ollama.chat(
-        model=MODEL_NAME,
+    return client.chat(
+        model=OLLAMA_MODEL,
         messages=messages,
         tools=tools,
         think=False,
     )
-
-    return response

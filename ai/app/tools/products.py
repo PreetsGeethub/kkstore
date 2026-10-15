@@ -1,13 +1,11 @@
 import httpx
 
-
-from app.schemas.product import ProductDetails,ProductSearchItem, ProductSearchResult
-
-BACKEND_URL = "http://localhost:5000"
-
-
-
-
+from app.config import BACKEND_URL, HTTP_TIMEOUT_SECONDS
+from app.schemas.product import (
+    ProductDetails,
+    ProductSearchItem,
+    ProductSearchResult,
+)
 
 
 async def search_products(
@@ -19,21 +17,18 @@ async def search_products(
 
     if query:
         params["search"] = query
-
     if max_price is not None:
         params["maxPrice"] = max_price
-
     if color:
         params["color"] = color
 
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=HTTP_TIMEOUT_SECONDS) as client:
         response = await client.get(
             f"{BACKEND_URL}/api/v1/products",
-            params=params
+            params=params,
         )
 
     response.raise_for_status()
-
     data = response.json()["data"]
 
     products = [
@@ -52,18 +47,16 @@ async def search_products(
         products=products,
         total=data["pagination"]["total"],
     )
-
     return result.model_dump()
 
 
 async def get_product_details(product_id: str):
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=HTTP_TIMEOUT_SECONDS) as client:
         response = await client.get(
             f"{BACKEND_URL}/api/v1/products/{product_id}"
         )
 
     response.raise_for_status()
-
     data = response.json()["data"]
 
     product = ProductDetails(
@@ -93,5 +86,4 @@ async def get_product_details(product_id: str):
             else None
         ),
     )
-
     return product.model_dump()

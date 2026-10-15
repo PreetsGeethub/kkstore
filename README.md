@@ -153,7 +153,7 @@ cd backend
 npm install
 ```
 
-Copy `backend/.env.example` to `backend/.env`, then fill in the Supabase PostgreSQL connection string and strong, unique JWT secrets. Set `CLIENT_URL` to the frontend origin. Configure Google OAuth, Razorpay, Cloudinary, and Gemini values only for features you enable. In production, the backend fails at startup if its required database, JWT, or frontend-origin configuration is missing. Never commit real credentials.
+Copy `backend/.env.example` to `backend/.env`, then fill in the Supabase `DATABASE_URL` (runtime connection) and `DIRECT_URL` (direct connection for Prisma CLI/migrations), plus strong, unique JWT secrets. Set `CLIENT_URL` to the frontend origin. Configure Google OAuth, Razorpay, Cloudinary, and Gemini values only for features you enable. In production, the backend fails at startup if its required database, JWT, or frontend-origin configuration is missing. Never commit real credentials.
 
 The backend defaults to port `5000`; set `PORT` explicitly when your environment requires a different port. Start the server:
 

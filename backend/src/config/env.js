@@ -31,3 +31,20 @@ export const env = {
 
   GEMINI_API_KEY: process.env.GEMINI_API_KEY,
 };
+
+if (env.NODE_ENV === "production") {
+  const required = [
+    "DATABASE_URL",
+    "JWT_ACCESS_SECRET",
+    "JWT_REFRESH_SECRET",
+    "JWT_PROFILE_COMPLETION_SECRET",
+    "CLIENT_URL",
+  ];
+  const missing = required.filter((key) => !process.env[key]);
+
+  if (missing.length > 0) {
+    throw new Error(
+      `Missing required production environment variables: ${missing.join(", ")}`
+    );
+  }
+}

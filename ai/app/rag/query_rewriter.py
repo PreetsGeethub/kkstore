@@ -1,4 +1,4 @@
-from app.llm.client import ask_ollama
+from app.llm.client import ask_llm
 
 
 def rewrite_query(

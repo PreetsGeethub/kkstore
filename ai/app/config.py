@@ -53,6 +53,12 @@ if LLM_PROVIDER == "openrouter":
         )
 
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+LLM_MAX_CALLS_PER_MINUTE = int(
+    os.getenv("LLM_MAX_CALLS_PER_MINUTE", "5")
+)
+LLM_MAX_CALLS_PER_DAY = int(
+    os.getenv("LLM_MAX_CALLS_PER_DAY", "30")
+)
 QDRANT_URL = os.getenv("QDRANT_URL", "http://localhost:6333")
 QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "all-MiniLM-L6-v2")

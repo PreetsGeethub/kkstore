@@ -1,8 +1,13 @@
-
+# Environment files and secrets
 .env
 .env.*
 !.env.example
+
+# Python virtual environment and cache
 .venv/
 __pycache__/
 *.py[cod]
 .pytest_cache/
+
+# Local backups
+*.snapshot

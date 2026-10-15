@@ -1,6 +1,9 @@
 from types import SimpleNamespace
 
-from app.llm.client import _normalize_openrouter_response, _to_openrouter_messages
+from app.llm.openrouter import (
+    normalize_response as _normalize_openrouter_response,
+    convert_messages as _to_openrouter_messages,
+)
 
 
 def test_openrouter_messages_include_tool_call_ids_and_json_arguments():

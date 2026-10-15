@@ -1,11 +1,16 @@
+
 import logging
 import uuid
 
-from fastapi import Cookie, FastAPI
+from fastapi import Cookie, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.agents.shopping_agent import run_shopping_agent
 from app.config import AI_ALLOWED_ORIGINS
+from app.llm.quota import (
+    LLMQuotaExceeded,
+    LLMQuotaUnavailable,
+)
 from app.schemas.chat import ChatRequest, ChatResponse
 
 logger = logging.getLogger(__name__)
@@ -48,6 +53,32 @@ async def chat(
             access_token=accessToken,
             conversation_id=conversation_id,
         )
+
+    except LLMQuotaExceeded as exc:
+        logger.warning(
+            "OpenRouter request blocked by quota: %s",
+            exc.window,
+        )
+        raise HTTPException(
+            status_code=429,
+            detail=str(exc),
+            headers={
+                "Retry-After": str(exc.retry_after_seconds),
+            },
+        ) from exc
+
+    except LLMQuotaUnavailable as exc:
+        logger.error(
+            "Redis quota check failed; refusing the LLM request."
+        )
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "The AI service is temporarily unavailable. "
+                "Please retry shortly."
+            ),
+        ) from exc
+
     except Exception:
         # Never log access tokens, cookie values, or full order payloads.
         logger.exception("AI chat request failed")

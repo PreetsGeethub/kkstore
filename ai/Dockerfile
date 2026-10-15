@@ -10,6 +10,7 @@ RUN useradd --create-home --shell /usr/sbin/nologin kkstore
 
 COPY requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu torch \
     && pip install --no-cache-dir -r requirements.txt
 
 COPY --chown=kkstore:kkstore app ./app

@@ -13,6 +13,7 @@ import {
     verifyProfileCompletionToken,
 } from "../utils/token.js";
 import prisma from "../config/prisma.js";
+import { env } from "../config/env.js";
 
 export const register = asyncHandler(async (req, res) => {
     const userData = req.validated.body;
@@ -71,7 +72,7 @@ export const logout = asyncHandler(async (req, res) => {
 export const googleCallback = asyncHandler(async (req, res) => {
     const user = req.user;
 
-    const frontendUrl = process.env.FRONTEND_URL;
+    const frontendUrl = env.CLIENT_URL;
 
     if (!user.phone) {
         const profileCompletionToken =

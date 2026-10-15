@@ -4,15 +4,17 @@ WORKDIR /app
 
 COPY package*.json ./
 
-# Prisma's config reads DIRECT_URL at generate time; this placeholder is only
-# for schema/client generation and is never used to connect to a database.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends openssl \
     && rm -rf /var/lib/apt/lists/* \
-    && npm ci --omit=dev \
-    && DIRECT_URL="postgresql://ci:ci@127.0.0.1:5432/ci" npx prisma generate
+    && npm ci --omit=dev
 
+# Prisma 7 reads DIRECT_URL from prisma.config.js while generating the client.
+# This placeholder is for generation only; runtime uses DATABASE_URL.
 COPY prisma ./prisma
+COPY prisma.config.js ./prisma.config.js
+RUN DIRECT_URL="postgresql://ci:ci@127.0.0.1:5432/ci" npx prisma generate
+
 COPY src ./src
 
 ENV NODE_ENV=production

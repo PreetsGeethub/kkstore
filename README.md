@@ -198,7 +198,7 @@ Adjust `.env` for your environment. The service reads `BACKEND_URL`, `OLLAMA_BAS
 Start FastAPI after indexing the Qdrant collections in the next step:
 
 ```bash
-uvicorn app.main:app --host 0.0.0.0 --port 8000
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
 For local development, you can add `--reload`.

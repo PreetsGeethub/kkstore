@@ -1,16 +1,29 @@
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, VectorParams
 
-client = QdrantClient(url="http://localhost:6333")
+from app.config import QDRANT_API_KEY, QDRANT_URL
 
-collection_name = "kkstore_products"
+client = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY or None)
+COLLECTION_NAME = "kkstore_products"
 
-client.create_collection(
-    collection_name=collection_name,
-    vectors_config=VectorParams(
-        size=384,
-        distance=Distance.COSINE,
-    ),
-)
 
-print(f"Collection '{collection_name}' created successfully.")
+def ensure_collection():
+    existing = {
+        collection.name
+        for collection in client.get_collections().collections
+    }
+    if COLLECTION_NAME not in existing:
+        client.create_collection(
+            collection_name=COLLECTION_NAME,
+            vectors_config=VectorParams(
+                size=384,
+                distance=Distance.COSINE,
+            ),
+        )
+        print(f"Created collection '{COLLECTION_NAME}'.")
+    else:
+        print(f"Collection '{COLLECTION_NAME}' already exists.")
+
+
+if __name__ == "__main__":
+    ensure_collection()

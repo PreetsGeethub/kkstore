@@ -1,13 +1,14 @@
 from qdrant_client import QdrantClient
 from sentence_transformers import SentenceTransformer
 from qdrant_client.models import Filter, FieldCondition, MatchValue
-MODEL_NAME = "all-MiniLM-L6-v2"
+
+from app.config import EMBEDDING_MODEL, QDRANT_URL
+from app.rag.schemas import RetrievalResult
+
 COLLECTION_NAME = "kkstore_knowledge"
 
-model = SentenceTransformer(MODEL_NAME)
-qdrant = QdrantClient(url="http://localhost:6333")
-
-from app.rag.schemas import RetrievalResult
+model = SentenceTransformer(EMBEDDING_MODEL)
+qdrant = QdrantClient(url=QDRANT_URL)
 
 
 def retrieve_knowledge(
@@ -15,7 +16,6 @@ def retrieve_knowledge(
     limit: int = 10,
     source: str | None = None,
 ) -> list[RetrievalResult]:
-
     query_vector = model.encode(query).tolist()
     query_filter = None
 
@@ -28,6 +28,7 @@ def retrieve_knowledge(
                 )
             ]
         )
+
     results = qdrant.query_points(
         collection_name=COLLECTION_NAME,
         query=query_vector,

@@ -1,8 +1,8 @@
 import ollama
 
-from app.config import OLLAMA_BASE_URL, OLLAMA_MODEL
+from app.config import OLLAMA_BASE_URL, OLLAMA_MODEL, OLLAMA_TIMEOUT_SECONDS
 
-client = ollama.Client(host=OLLAMA_BASE_URL)
+client = ollama.Client(host=OLLAMA_BASE_URL, timeout=OLLAMA_TIMEOUT_SECONDS)
 
 
 def ask_ollama(messages, tools=None):

@@ -14,6 +14,7 @@ OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434").rstrip(
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen3:4b")
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 QDRANT_URL = os.getenv("QDRANT_URL", "http://localhost:6333")
+QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "all-MiniLM-L6-v2")
 RERANKER_MODEL = os.getenv(
     "RERANKER_MODEL",

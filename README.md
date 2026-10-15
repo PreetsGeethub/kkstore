@@ -186,16 +186,35 @@ Activate the environment.
 source .venv/bin/activate
 ```
 
-Install Python dependencies and start FastAPI:
+Install Python dependencies and configure the AI service:
 
 ```bash
 pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
+cp .env.example .env
 ```
 
-Copy `ai/.env.example` to `ai/.env` and adjust values for your environment. The service now reads `BACKEND_URL`, `OLLAMA_BASE_URL`, `OLLAMA_MODEL`, `REDIS_URL`, `QDRANT_URL`, optional `QDRANT_API_KEY`, embedding/reranker model names, request timeout, and `AI_ALLOWED_ORIGINS` from environment variables. Defaults are suitable only for local development; use private service URLs and exact trusted origins in production.
+Adjust `.env` for your environment. The service reads `BACKEND_URL`, `OLLAMA_BASE_URL`, `OLLAMA_MODEL`, `REDIS_URL`, `QDRANT_URL`, optional `QDRANT_API_KEY`, embedding/reranker model names, request timeout, and `AI_ALLOWED_ORIGINS` from environment variables. Defaults are suitable only for local development; use private service URLs and exact trusted origins in production.
 
-### 6. Configure and start the frontend
+Start FastAPI after indexing the Qdrant collections in the next step:
+
+```bash
+uvicorn app.main:app --host 0.0.0.0 --port 8000
+```
+
+For local development, you can add `--reload`.
+
+### 6. Index product and policy data in Qdrant
+
+Start the Node backend, Ollama, Redis, and Qdrant first. Then, from the `ai` directory with the Python virtual environment active, run:
+
+```bash
+python -m app.index_products
+python -m app.ingestion.knowledge_qdrant
+```
+
+The product indexer reads the current catalog through the Node API. The knowledge indexer reads Markdown policy files from `ai/knowledge`, creates the knowledge collection if needed, updates changed chunks, and removes stale chunks. Re-run indexing when the catalog or policy documents change.
+
+### 7. Configure and start the frontend
 
 Copy `frontend/.env.example` to `frontend/.env.local`. Set `NEXT_PUBLIC_API_URL` to the Node API base URL (including `/api/v1`) and `NEXT_PUBLIC_AI_URL` to the FastAPI base URL. The example file contains local-development defaults.
 

@@ -66,12 +66,14 @@ jobs:
           python-version: "3.12"
           cache: pip
           cache-dependency-path: ai/requirements.txt
-      - name: Install AI dependencies
-        run: pip install --no-cache-dir -r ai/requirements.txt
+      - name: Install CPU-only PyTorch and AI dependencies
+        run: |
+          pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu torch
+          pip install --no-cache-dir -r ai/requirements.txt
       - name: Check Python syntax
         run: python -m compileall -q ai/app
       - name: Run AI schema tests
         run: |
           pip install pytest
-          pytest -q tests
+          PYTHONPATH=. pytest -q tests
         working-directory: ai

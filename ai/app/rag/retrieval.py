@@ -1,14 +1,12 @@
 from qdrant_client import QdrantClient
-from sentence_transformers import SentenceTransformer
 from qdrant_client.models import Filter, FieldCondition, MatchValue
 
-from app.config import EMBEDDING_MODEL, QDRANT_URL
+from app.config import QDRANT_API_KEY, QDRANT_URL
+from app.embeddings import model
 from app.rag.schemas import RetrievalResult
 
 COLLECTION_NAME = "kkstore_knowledge"
-
-model = SentenceTransformer(EMBEDDING_MODEL)
-qdrant = QdrantClient(url=QDRANT_URL)
+qdrant = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY or None)
 
 
 def retrieve_knowledge(
@@ -33,7 +31,7 @@ def retrieve_knowledge(
         collection_name=COLLECTION_NAME,
         query=query_vector,
         query_filter=query_filter,
-        limit=limit,
+        limit=max(1, min(limit, 20)),
     ).points
 
     return [
@@ -45,4 +43,6 @@ def retrieve_knowledge(
             score=point.score,
         )
         for point in results
+        if point.payload
+        and all(key in point.payload for key in ("chunk_id", "source", "section", "text"))
     ]

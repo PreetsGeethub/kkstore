@@ -1,11 +1,9 @@
 from sentence_transformers import SentenceTransformer
 
-model = SentenceTransformer("all-MiniLM-L6-v2")
+from app.config import EMBEDDING_MODEL
 
-text = "minimal rose gold ring for everyday wear"
+model = SentenceTransformer(EMBEDDING_MODEL)
 
-embedding = model.encode(text)
 
-print("Embedding type:", type(embedding))
-print("Dimensions:", len(embedding))
-print("First 5 values:", embedding[:5])
+def embed_text(text: str) -> list[float]:
+    return model.encode(text).tolist()

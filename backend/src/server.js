@@ -1,10 +1,17 @@
 import "dotenv/config";
 import app from "./app.js";
+import { env } from "./config/env.js";
 
-
-
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+const server = app.listen(env.PORT, () => {
+  console.log(`Server running on port ${env.PORT}`);
 });
+
+function shutdown(signal) {
+  console.log(`Received ${signal}; closing HTTP server`);
+  server.close(() => {
+    process.exit(0);
+  });
+}
+
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));

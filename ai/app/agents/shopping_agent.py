@@ -3,7 +3,7 @@ from functools import partial
 
 from pydantic import ValidationError
 from app.llm.ollama import get_ollama_tools
-from app.llm.client import ask_ollama
+from app.llm.client import ask_llm
 from app.tools.orders import get_my_orders
 from app.conversation import get_conversation, save_conversation
 from app.tools.products import (
@@ -97,7 +97,7 @@ async def run_shopping_agent(
         }
     )
 
-    # Bind context internally; Qwen still supplies only `query`.
+    # Bind context internally; the configured model supplies only query.
     tools["knowledge_search"] = partial(
         knowledge_search,
         conversation_history=conversation_history,
@@ -118,7 +118,7 @@ async def run_shopping_agent(
         if "products" in result:
             product_results.extend(result["products"])
 
-    response = ask_ollama(messages, tools=get_ollama_tools())
+    response = ask_llm(messages, tools=get_ollama_tools())
 
     while tool_round < MAX_TOOL_ROUNDS:
         tool_round += 1
@@ -231,7 +231,7 @@ async def run_shopping_agent(
                 }
             )
 
-        response = ask_ollama(messages, tools=get_ollama_tools())
+        response = ask_llm(messages, tools=get_ollama_tools())
     return {
     "message": (
         "I couldn't complete the request after several tool attempts. "

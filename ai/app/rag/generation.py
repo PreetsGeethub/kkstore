@@ -3,7 +3,7 @@ from app.rag.reranker import rerank
 from app.rag.context import build_context
 
 from app.rag.schemas import RAGResponse, Source
-from app.llm.client import ask_ollama
+from app.llm.client import ask_llm
 
 SYSTEM_PROMPT = """
 You are a helpful assistant for KK Store.
@@ -44,19 +44,19 @@ def generate_rag_response(query: str) -> str:
         },
     ]
 
-    response = ask_ollama(messages)
+    response = ask_llm(messages)
     content = response.message.content
 
     if "</think>" in content:
         content = content.split("</think>", 1)[1].strip()
 
     return RAGResponse(
-    message=content,
-    sources=[
-        Source(
-            source=result.source,
-            section=result.section,
-        )
-        for result in results
-    ],
-)
+        message=content,
+        sources=[
+            Source(
+                source=result.source,
+                section=result.section,
+            )
+            for result in results
+        ],
+    )

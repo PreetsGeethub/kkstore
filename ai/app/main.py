@@ -40,7 +40,7 @@ async def chat(
     request: ChatRequest,
     accessToken: str | None = Cookie(default=None),
 ):
-    conversation_id = request.conversation_id or str(uuid.uuid4())
+    conversation_id = str(request.conversation_id or uuid.uuid4())
 
     try:
         result = await run_shopping_agent(

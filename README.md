@@ -153,9 +153,9 @@ cd backend
 npm install
 ```
 
-Configure the backend's local `.env` with the database connection and the secrets required for the features you use. At minimum, review `DATABASE_URL`, the JWT secrets, and `CLIENT_URL`; configure Google OAuth, payment, upload, or other provider credentials if needed. Do not commit real credentials.
+Copy `backend/.env.example` to `backend/.env`, then fill in the Supabase PostgreSQL connection string and strong, unique JWT secrets. Set `CLIENT_URL` to the frontend origin. Configure Google OAuth, Razorpay, Cloudinary, and Gemini values only for features you enable. In production, the backend fails at startup if its required database, JWT, or frontend-origin configuration is missing. Never commit real credentials.
 
-Set `PORT=5000` so the AI service's current backend API URLs match the backend port, then start the server:
+The backend defaults to port `5000`; set `PORT` explicitly when your environment requires a different port. Start the server:
 
 ```bash
 npm run dev
@@ -193,15 +193,11 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload --port 8000
 ```
 
-The service currently expects Redis at `localhost:6379`, Qdrant at `localhost:6333`, Ollama at its default local endpoint, and the Node backend at `http://localhost:5000`.
+Copy `ai/.env.example` to `ai/.env` and adjust values for your environment. The service now reads `BACKEND_URL`, `OLLAMA_BASE_URL`, `OLLAMA_MODEL`, `REDIS_URL`, `QDRANT_URL`, optional `QDRANT_API_KEY`, embedding/reranker model names, request timeout, and `AI_ALLOWED_ORIGINS` from environment variables. Defaults are suitable only for local development; use private service URLs and exact trusted origins in production.
 
 ### 6. Configure and start the frontend
 
-Create `frontend/.env.local` with:
-
-```dotenv
-NEXT_PUBLIC_AI_URL=http://localhost:8000
-```
+Copy `frontend/.env.example` to `frontend/.env.local`. Set `NEXT_PUBLIC_API_URL` to the Node API base URL (including `/api/v1`) and `NEXT_PUBLIC_AI_URL` to the FastAPI base URL. The example file contains local-development defaults.
 
 Then start the frontend in another terminal:
 
@@ -211,7 +207,7 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:3000`. The AI service's current CORS configuration permits the local frontend origin `http://localhost:3000`. If you change the frontend or AI-service host, update CORS and cookie settings accordingly.
+Open `http://localhost:3000`. The AI service exposes `GET /health/live`; the Node API exposes the same liveness path. Configure `AI_ALLOWED_ORIGINS` as a comma-separated list of exact frontend origins. For production order lookup, make sure the auth cookie can be sent to the AI origin: when all services use subdomains of the same site, configure `COOKIE_DOMAIN` (for example, `.kkstore.in`) and HTTPS consistently. Leave it blank for local development.
 
 > **Local setup note:** This repository still relies on environment-specific backend configuration and pre-indexed Qdrant data. If you are setting it up from a fresh clone, complete those prerequisites before treating the local setup as reproducible.
 
@@ -230,7 +226,7 @@ Open `http://localhost:3000`. The AI service's current CORS configuration permit
 - Fresh-clone setup still requires backend-specific environment/database setup and pre-indexed Qdrant collections.
 - The active shopping-agent path uses Ollama and the local Qwen3 4B model; deploying to a small server requires a hosted inference option or a separate inference host.
 - Before production use, add automated regression tests for tool calling and RAG, evaluate answer quality against a representative question set, and review logging, error handling, latency, and security.
-- Consolidate environment configuration and provide a repeatable indexing/initialization command for product and policy collections.
+- Environment-backed service URLs, environment examples, health endpoints, and repeatable Qdrant collection setup/indexing scripts have been added. These changes still need fresh-clone verification and automated regression coverage before production use.
 
 ## Author
 

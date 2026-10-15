@@ -56,6 +56,9 @@ jobs:
       - name: Run frontend production build even when lint reports existing issues
         if: always()
         run: npm run build
+      - name: Audit production dependencies
+        if: always()
+        run: npm audit --omit=dev --audit-level=high
 
   ai-python:
     runs-on: ubuntu-latest

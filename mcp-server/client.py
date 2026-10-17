@@ -61,67 +61,92 @@ async def main() -> None:
         ]
 
         # 5. Send the question and available tools to the LLM
-        response = openrouter_client.chat.completions.create(
-            model="openrouter/free",
-            messages=messages,
-            tools=llm_tools,
-            tool_choice="auto",
-        )
+        
+        MAX_TOOL_ROUNDS = 3
+        MAX_TOOL_CALLS = 5
+        total_tool_calls = 0
 
-        # Extract the assistant's message from the API response
-        message = response.choices[0].message
+        for round_number in range(MAX_TOOL_ROUNDS):
 
-        # 6. Check whether the LLM requested any tools
-        if message.tool_calls:
+            # Ask the LLM what to do next
+            response = openrouter_client.chat.completions.create(
+                model="openrouter/free",
+                messages=messages,
+                tools=llm_tools,
+                tool_choice="auto",
+            )
 
-            # Save the assistant's tool-call request in the history
+            message = response.choices[0].message
+
+            # If the LLM didn't request tools, we're done
+            if not message.tool_calls:
+                print("Final answer:", message.content)
+                break
+
+            # Save the assistant's tool-call request
             messages.append(message.model_dump(exclude_none=True))
 
-            # Process each tool call requested by the LLM
+            # Execute each requested tool
+
+            
+            limit_reached = False
+
             for tool_call in message.tool_calls:
+                if total_tool_calls >= MAX_TOOL_CALLS:
+                    limit_reached = True
+                    print("Tool-call limit reached. Stopping the agent.")
+                    break
 
-                # Extract the requested tool name and arguments
                 tool_name = tool_call.function.name
-                arguments = json.loads(
-                    tool_call.function.arguments
-                )
+                arguments = json.loads(tool_call.function.arguments)
 
+                print(f"Round: {round_number + 1}")
                 print(f"Calling MCP tool: {tool_name}")
                 print(f"Arguments: {arguments}")
 
-                # Execute the requested tool through MCP
-                tool_result = await client.call_tool(
-                    tool_name,
-                    arguments,
-                )
+                total_tool_calls += 1
 
-                print(
-                    "MCP result:",
-                    tool_result.structured_content,
-                )
+                try:
+                    tool_result = await client.call_tool(
+                        tool_name,
+                        arguments,
+                    )
 
-                # 7. Send this tool's result back into the conversation
+                    if tool_result.is_error:
+                        result_content = {
+                            "error": True,
+                            "message": str(tool_result.content),
+                        }
+                    else:
+                        result_content = {
+                            "error": False,
+                            "data": tool_result.structured_content,
+                        }
+
+                except Exception as exc:
+                    result_content = {
+                        "error": True,
+                        "message": "Tool execution failed.",
+                    }
+
                 messages.append({
                     "role": "tool",
                     "tool_call_id": tool_call.id,
-                    "content": json.dumps(
-                        tool_result.structured_content
-                    ),
+                    "content": json.dumps(result_content),
                 })
 
-            # 8. Ask the LLM to formulate the final answer
-            final_response = openrouter_client.chat.completions.create(
-                model="openrouter/free",
-                messages=messages,
-            )
+                print("Tool outcome:", result_content)
 
-            final_message = final_response.choices[0].message
+       
 
-            print("Final answer:", final_message.content)
+            if limit_reached:
+                print("Agent stopped before executing additional tools.")
+                return
 
         else:
-            # The LLM answered without requesting a tool
-            print("Final answer:", message.content)
+            # The loop ended because the maximum was reached
+            print("Maximum tool-call rounds reached.")
+
 
 
 if __name__ == "__main__":

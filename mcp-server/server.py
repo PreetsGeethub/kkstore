@@ -3,7 +3,7 @@ import os
 
 import httpx
 from dotenv import load_dotenv
-mcp = MCPServer("Demo")
+mcp = MCPServer("KK Store MCP Server")
 load_dotenv()
 
 BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:5000")

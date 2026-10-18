@@ -1,12 +1,85 @@
 from mcp.server import MCPServer
+import os
 
+import httpx
+from dotenv import load_dotenv
 mcp = MCPServer("Demo")
+load_dotenv()
 
+BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:5000")
+HTTP_TIMEOUT_SECONDS = 10.0
 
 @mcp.tool()
 def add(a: int, b: int) -> int:
     """Add two numbers."""
     return a + b
+
+
+@mcp.tool()
+async def search_products(
+    query: str = "",
+    max_price: float | None = None,
+    color: str | None = None,
+) -> dict:
+    """Search KK Store products by keyword, maximum price, or color."""
+
+    params = {
+        "page": 1,
+        "limit": 10,
+    }
+
+    if query:
+        params["search"] = query
+
+    if max_price is not None:
+        params["maxPrice"] = max_price
+
+    if color:
+        params["color"] = color
+
+    async with httpx.AsyncClient(
+        timeout=HTTP_TIMEOUT_SECONDS
+    ) as client:
+        response = await client.get(
+            f"{BACKEND_URL.rstrip('/')}/api/v1/products",
+            params=params,
+        )
+        response.raise_for_status()
+
+    payload = response.json()
+    data = payload["data"]
+
+    products = [
+        {
+            "id": product["id"],
+            "name": product["name"],
+            "category": product["category"]["name"],
+            "price": product["startingPrice"],
+            "stock": product["totalStock"],
+            "image_url": product["thumbnail"],
+        }
+        for product in data["products"]
+    ]
+
+    return {
+        "products": products,
+        "total": data["pagination"]["total"],
+    }
+
+
+
+@mcp.tool()
+async def get_product_details(product_id: str) -> dict:
+    """Get detailed information about a KK Store product using its product ID."""
+
+    async with httpx.AsyncClient(timeout=HTTP_TIMEOUT_SECONDS) as client:
+        response = await client.get(
+            f"{BACKEND_URL.rstrip('/')}/api/v1/products/{product_id}"
+        )
+        response.raise_for_status()
+
+    return response.json()
+
 
 
 @mcp.resource("greeting://{name}")

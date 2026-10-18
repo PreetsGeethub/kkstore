@@ -48,15 +48,17 @@ async def main() -> None:
 
         # Discover the tools exposed by the server
         result = await client.list_tools()
+        print([tool.name for tool in result.tools])
 
         # Convert them into the format OpenRouter expects
         llm_tools = convert_mcp_tools(result.tools)
+  
 
         # 4. Keep track of the conversation
         messages = [
             {
                 "role": "user",
-                "content": "Calculate 125 + 347 using the add tool.",
+                "content": "Find a product by searching for 'ring', then get its full details using get_product_details.",
             }
         ]
 
@@ -107,10 +109,8 @@ async def main() -> None:
                 total_tool_calls += 1
 
                 try:
-                    tool_result = await client.call_tool(
-                        tool_name,
-                        arguments,
-                    )
+                    
+                    tool_result = await client.call_tool(tool_name, arguments)
 
                     if tool_result.is_error:
                         result_content = {
@@ -118,12 +118,29 @@ async def main() -> None:
                             "message": str(tool_result.content),
                         }
                     else:
-                        result_content = {
-                            "error": False,
-                            "data": tool_result.structured_content,
-                        }
+                        try:
+                            if tool_result.structured_content is not None:
+                                data = tool_result.structured_content
+                            else:
+                                data = json.loads(tool_result.content[0].text)
+
+                            result_content = {
+                                "error": False,
+                                "data": data,
+                            }
+
+                        except (json.JSONDecodeError, IndexError, AttributeError, TypeError) as exc:
+                            print(f"Response parsing error: {exc}")
+
+                            result_content = {
+                                "error": True,
+                                "message": "The tool returned an invalid or unexpected response format.",
+                            }
+
 
                 except Exception as exc:
+                    print(f"MCP tool call or transport error: {exc}")
+
                     result_content = {
                         "error": True,
                         "message": "Tool execution failed.",

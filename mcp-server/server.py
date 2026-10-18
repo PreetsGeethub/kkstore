@@ -68,17 +68,73 @@ async def search_products(
 
 
 
+
 @mcp.tool()
 async def get_product_details(product_id: str) -> dict:
     """Get detailed information about a KK Store product using its product ID."""
 
-    async with httpx.AsyncClient(timeout=HTTP_TIMEOUT_SECONDS) as client:
-        response = await client.get(
-            f"{BACKEND_URL.rstrip('/')}/api/v1/products/{product_id}"
-        )
-        response.raise_for_status()
+    if not product_id or not product_id.strip():
+        return {
+            "error": True,
+            "error_type": "invalid_input",
+            "message": "product_id must not be empty.",
+        }
 
-    return response.json()
+    product_id = product_id.strip()
+
+    try:
+        async with httpx.AsyncClient(
+            timeout=HTTP_TIMEOUT_SECONDS
+        ) as client:
+            response = await client.get(
+                f"{BACKEND_URL.rstrip('/')}/api/v1/products/{product_id}"
+            )
+            response.raise_for_status()
+            return response.json()
+
+    except httpx.HTTPStatusError as exc:
+        status = exc.response.status_code
+
+        if status == 404:
+            return {
+                "error": True,
+                "error_type": "not_found",
+                "message": "The requested product was not found.",
+            }
+
+        if status == 400:
+            return {
+                "error": True,
+                "error_type": "invalid_request",
+                "message": "The backend rejected the product request.",
+            }
+
+        if status >= 500:
+            return {
+                "error": True,
+                "error_type": "backend_failure",
+                "message": "The product service encountered a server error.",
+            }
+
+        return {
+            "error": True,
+            "error_type": "http_error",
+            "message": f"The product service returned HTTP {status}.",
+        }
+
+    except httpx.TimeoutException:
+        return {
+            "error": True,
+            "error_type": "timeout",
+            "message": "The product service took too long to respond.",
+        }
+
+    except httpx.RequestError:
+        return {
+            "error": True,
+            "error_type": "connection_error",
+            "message": "Could not connect to the product service.",
+        }
 
 
 

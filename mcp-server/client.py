@@ -55,11 +55,28 @@ async def main() -> None:
   
 
         # 4. Keep track of the conversation
+        
         messages = [
             {
+                "role": "system",
+                "content": (
+                    "You are the KK Store shopping assistant. "
+                    "Use search_products to find products when needed. "
+                    "Call get_product_details only when you have a product ID "
+                    "obtained from tool results or reliable conversation context. "
+                    "Never invent or guess product IDs. "
+                    "If a search returns no matching products, explain that no "
+                    "matching products were found instead of calling "
+                    "get_product_details without a valid ID. "
+                    "If the available information is insufficient, ask the user "
+                    "for clarification rather than guessing."
+                    "When a tool returns an error, do not treat the error as successful product data. Explain the issue accurately, do not invent missing information, and do not repeatedly retry the same failing request without a reason."
+                ),
+            },
+            {
                 "role": "user",
-                "content": "Find a product by searching for 'ring', then get its full details using get_product_details.",
-            }
+                "content": "Find a product by searching for 'ring', then get its full details using get_product_details."
+            },
         ]
 
         # 5. Send the question and available tools to the LLM
@@ -112,10 +129,12 @@ async def main() -> None:
                     
                     tool_result = await client.call_tool(tool_name, arguments)
 
+                   
                     if tool_result.is_error:
                         result_content = {
                             "error": True,
-                            "message": str(tool_result.content),
+                            "error_type": "tool_execution_error",
+                            "message": "The tool could not complete the request.",
                         }
                     else:
                         try:
@@ -124,10 +143,28 @@ async def main() -> None:
                             else:
                                 data = json.loads(tool_result.content[0].text)
 
+                            # Preserve errors returned by the tool itself.
+                            if isinstance(data, dict) and data.get("error") is True:
+                                result_content = data
+                            else:
+                                result_content = {
+                                    "error": False,
+                                    "data": data,
+                                }
+
+                        except (
+                            json.JSONDecodeError,
+                            IndexError,
+                            AttributeError,
+                            TypeError,
+                        ) as exc:
+                            print(f"Response parsing error: {exc}")
                             result_content = {
-                                "error": False,
-                                "data": data,
+                                "error": True,
+                                "error_type": "invalid_tool_response",
+                                "message": "The tool returned an invalid or unexpected response format.",
                             }
+
 
                         except (json.JSONDecodeError, IndexError, AttributeError, TypeError) as exc:
                             print(f"Response parsing error: {exc}")
@@ -160,9 +197,26 @@ async def main() -> None:
                 print("Agent stopped before executing additional tools.")
                 return
 
+        
         else:
-            # The loop ended because the maximum was reached
             print("Maximum tool-call rounds reached.")
+
+            final_response = openrouter_client.chat.completions.create(
+                model="openrouter/free",
+                messages=messages + [{
+                    "role": "user",
+                    "content": (
+                        "You have reached the tool-call limit. "
+                        "Give the best answer you can using the information "
+                        "already available in this conversation. "
+                        "Do not claim you performed actions you did not perform, "
+                        "and mention any uncertainty or missing information."
+                    ),
+                }],
+            )
+
+            print("Final answer:", final_response.choices[0].message.content)
+
 
 
 

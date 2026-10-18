@@ -166,14 +166,7 @@ async def main() -> None:
                             }
 
 
-                        except (json.JSONDecodeError, IndexError, AttributeError, TypeError) as exc:
-                            print(f"Response parsing error: {exc}")
-
-                            result_content = {
-                                "error": True,
-                                "message": "The tool returned an invalid or unexpected response format.",
-                            }
-
+                 
 
                 except Exception as exc:
                     print(f"MCP tool call or transport error: {exc}")

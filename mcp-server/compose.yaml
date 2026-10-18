@@ -1,0 +1,11 @@
+services:
+  kkstore-mcp:
+    image: ghcr.io/preetsgeethub/kkstore-mcp:latest
+    container_name: kkstore-mcp
+    restart: unless-stopped
+    environment:
+      BACKEND_URL: ${BACKEND_URL:-http://host.docker.internal:5000}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "127.0.0.1:8000:8000"

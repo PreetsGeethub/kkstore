@@ -85,8 +85,7 @@ def build_oauth_provider() -> OAuthClientProvider:
         redirect_handler=open_authorization_url,
         callback_handler=receive_authorization_callback,
         client_metadata_url=(
-            "https://raw.githubusercontent.com/PreetsGeethub/kkstore/"
-            "experiment/kkstore-mcp/mcp-server/client-metadata.json"
+            "https://mcp.defite.cloud/.well-known/kkstore-client-metadata.json"
         ),
     )
 

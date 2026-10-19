@@ -115,17 +115,37 @@ async def search_products(
 
     payload = response.json()
     data = payload["data"]
-    products = [
-        {
-            "id": product["id"],
-            "name": product["name"],
-            "category": product["category"]["name"],
-            "price": product["startingPrice"],
-            "stock": product["totalStock"],
-            "image_url": product["thumbnail"],
-        }
-        for product in data["products"]
-    ]
+    products = []
+
+    for product in data["products"]:
+        # The backend returns price and stock per variant, not at product level.
+        variants = product.get("variants") or []
+        prices = []
+        total_stock = 0
+
+        for variant in variants:
+            if variant.get("price") is not None:
+                try:
+                    prices.append(float(variant["price"]))
+                except (TypeError, ValueError):
+                    continue
+
+            try:
+                total_stock += int(variant.get("stock") or 0)
+            except (TypeError, ValueError):
+                continue
+
+        category = product.get("category") or {}
+        products.append(
+            {
+                "id": product["id"],
+                "name": product["name"],
+                "category": category.get("name"),
+                "price": min(prices) if prices else None,
+                "stock": total_stock,
+                "image_url": product.get("thumbnail"),
+            }
+        )
 
     return {"products": products, "total": data["pagination"]["total"]}
 

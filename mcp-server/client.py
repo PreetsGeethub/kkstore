@@ -82,6 +82,10 @@ def build_oauth_provider() -> OAuthClientProvider:
         storage=InMemoryOAuthStorage(),
         redirect_handler=open_authorization_url,
         callback_handler=receive_authorization_callback,
+        client_metadata_url=(
+            "https://raw.githubusercontent.com/PreetsGeethub/kkstore/"
+            "experiment/kkstore-mcp/mcp-server/client-metadata.json"
+        ),
     )
 
 api_key = os.getenv("OPENROUTER_API_KEY")

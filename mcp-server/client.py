@@ -71,7 +71,9 @@ async def receive_authorization_callback() -> AuthorizationCodeResult:
 def build_oauth_provider() -> OAuthClientProvider:
     # The SDK discovers the protected-resource metadata from the MCP server.
     return OAuthClientProvider(
-        server_url="http://localhost:8000",
+        # Use the canonical public URL for OAuth/resource metadata discovery.
+        # The actual MCP HTTP transport below still uses the SSH-tunnel URL.
+        server_url="https://mcp.defite.cloud/mcp",
         client_metadata=OAuthClientMetadata(
             client_name="KK Store Python Agent",
             redirect_uris=[AnyUrl("http://localhost:3030/callback")],

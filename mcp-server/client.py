@@ -40,14 +40,14 @@ class InMemoryOAuthStorage(TokenStorage):
 
 
 async def open_authorization_url(url: str) -> None:
-    print("\\nOpening WorkOS sign-in in your browser...")
+    print("\nOpening WorkOS sign-in in your browser...")
     print("If the browser cannot load the localhost callback afterward, copy its full URL from the address bar.")
     webbrowser.open(url)
 
 
 async def receive_authorization_callback() -> AuthorizationCodeResult:
     callback_url = input(
-        "\\nAfter signing in, paste the full callback URL from your browser here: "
+        "\nAfter signing in, paste the full callback URL from your browser here: "
     ).strip()
     parsed = urlparse(callback_url)
     params = parse_qs(parsed.query)
@@ -85,13 +85,13 @@ def build_oauth_provider() -> OAuthClientProvider:
     )
 
 api_key = os.getenv("OPENROUTER_API_KEY")
-
-if not api_key:
-    raise RuntimeError("OPENROUTER_API_KEY is not set")
-
-openrouter_client = OpenAI(
-    base_url="https://openrouter.ai/api/v1",
-    api_key=api_key,
+openrouter_client = (
+    OpenAI(
+        base_url="https://openrouter.ai/api/v1",
+        api_key=api_key,
+    )
+    if api_key
+    else None
 )
 
 
@@ -134,7 +134,14 @@ async def main() -> None:
 
                 # Convert them into the format OpenRouter expects
                 llm_tools = convert_mcp_tools(result.tools)
-          
+
+                if openrouter_client is None:
+                    print(
+                        "OAuth authentication succeeded and MCP tools are available. "
+                        "Set OPENROUTER_API_KEY in .env to enable the LLM shopping agent."
+                    )
+                    return
+
 
                 # 4. Keep track of the conversation
                 

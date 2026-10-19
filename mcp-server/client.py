@@ -5,7 +5,7 @@ import os
 import webbrowser
 from urllib.parse import parse_qs, urlparse
 
-import httpx2
+import httpx
 from dotenv import load_dotenv
 from mcp import Client
 from mcp.client.auth import AuthorizationCodeResult, OAuthClientProvider, TokenStorage
@@ -118,15 +118,16 @@ async def main() -> None:
 
     # 3. Connect to our MCP server with WorkOS OAuth
     oauth_auth = build_oauth_provider()
-    async with httpx2.AsyncClient(
+    async with httpx.AsyncClient(
         auth=oauth_auth,
-        timeout=httpx2.Timeout(30.0, read=300.0),
+        timeout=httpx.Timeout(30.0, read=300.0),
     ) as http_client:
-        async with streamable_http_client(
-            "http://localhost:8000/mcp",
-            http_client=http_client,
-        ) as (read, write):
-            async with Client((read, write)) as client:
+        async with Client(
+            streamable_http_client(
+                "http://localhost:8000/mcp",
+                http_client=http_client,
+            )
+        ) as client:
 
                 # Discover the tools exposed by the server
                 result = await client.list_tools()

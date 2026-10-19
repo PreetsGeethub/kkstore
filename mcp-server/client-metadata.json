@@ -11,5 +11,5 @@
     "code"
   ],
   "token_endpoint_auth_method": "none",
-  "client_id": "https://raw.githubusercontent.com/PreetsGeethub/kkstore/experiment/kkstore-mcp/mcp-server/client-metadata.json"
+  "client_id": "https://mcp.defite.cloud/.well-known/kkstore-client-metadata.json"
 }

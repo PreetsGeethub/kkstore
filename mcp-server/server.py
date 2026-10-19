@@ -1,15 +1,87 @@
 from mcp.server import MCPServer
+from mcp.server.auth.provider import AccessToken, TokenVerifier
+from mcp.server.auth.settings import AuthSettings
+import asyncio
 import os
 
 import httpx
+import jwt
+from jwt import PyJWKClient
 from dotenv import load_dotenv
 
 load_dotenv()
 
-mcp = MCPServer("KK Store MCP Server")
+BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:5000").rstrip("/")
+AUTHKIT_DOMAIN = os.getenv("AUTHKIT_DOMAIN", "").rstrip("/")
+MCP_RESOURCE_URL = os.getenv("MCP_RESOURCE_URL", "").rstrip("/")
 
-BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:5000")
+if not AUTHKIT_DOMAIN or not MCP_RESOURCE_URL:
+    raise RuntimeError(
+        "AUTHKIT_DOMAIN and MCP_RESOURCE_URL must be configured. "
+        "Refusing to start the MCP server without authentication settings."
+    )
+
+if not AUTHKIT_DOMAIN.startswith("https://") or not MCP_RESOURCE_URL.startswith("https://"):
+    raise RuntimeError("AUTHKIT_DOMAIN and MCP_RESOURCE_URL must use HTTPS.")
+
+JWKS_CLIENT = PyJWKClient(f"{AUTHKIT_DOMAIN}/oauth2/jwks")
 HTTP_TIMEOUT_SECONDS = 10.0
+
+
+class WorkOSTokenVerifier(TokenVerifier):
+    """Verify WorkOS AuthKit access tokens for this MCP resource."""
+
+    async def verify_token(self, token: str) -> AccessToken | None:
+        try:
+            signing_key = await asyncio.to_thread(
+                JWKS_CLIENT.get_signing_key_from_jwt, token
+            )
+            claims = jwt.decode(
+                token,
+                signing_key.key,
+                algorithms=["RS256"],
+                issuer=AUTHKIT_DOMAIN,
+                audience=MCP_RESOURCE_URL,
+                options={"require": ["exp", "iss", "aud", "sub", "client_id"]},
+            )
+        except Exception:
+            # Fail closed for invalid tokens and JWKS/network failures.
+            return None
+
+        audience = claims.get("aud")
+        if isinstance(audience, list):
+            resource = MCP_RESOURCE_URL if MCP_RESOURCE_URL in audience else None
+        elif isinstance(audience, str):
+            resource = audience
+        else:
+            resource = None
+
+        if resource != MCP_RESOURCE_URL:
+            return None
+
+        scope_claim = claims.get("scope", "")
+        scopes = scope_claim.split() if isinstance(scope_claim, str) else []
+
+        return AccessToken(
+            token=token,
+            client_id=claims["client_id"],
+            scopes=scopes,
+            expires_at=int(claims["exp"]),
+            resource=resource,
+            subject=claims["sub"],
+            claims=claims,
+        )
+
+
+mcp = MCPServer(
+    "KK Store MCP Server",
+    token_verifier=WorkOSTokenVerifier(),
+    auth=AuthSettings(
+        issuer_url=AUTHKIT_DOMAIN,
+        resource_server_url=MCP_RESOURCE_URL,
+        validate_token_resource=True,
+    ),
+)
 
 
 @mcp.tool()
@@ -36,7 +108,7 @@ async def search_products(
 
     async with httpx.AsyncClient(timeout=HTTP_TIMEOUT_SECONDS) as client:
         response = await client.get(
-            f"{BACKEND_URL.rstrip('/')}/api/v1/products",
+            f"{BACKEND_URL}/api/v1/products",
             params=params,
         )
         response.raise_for_status()
@@ -73,7 +145,7 @@ async def get_product_details(product_id: str) -> dict:
     try:
         async with httpx.AsyncClient(timeout=HTTP_TIMEOUT_SECONDS) as client:
             response = await client.get(
-                f"{BACKEND_URL.rstrip('/')}/api/v1/products/{product_id}"
+                f"{BACKEND_URL}/api/v1/products/{product_id}"
             )
             response.raise_for_status()
             return response.json()

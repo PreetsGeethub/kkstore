@@ -46,13 +46,10 @@ function OrderConfirmationPageContent() {
   const orderId = searchParams.get("orderId");
 
   const [order, setOrder] = useState<OrderDetails | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(Boolean(orderId));
 
   useEffect(() => {
-    if (!orderId) {
-      setLoading(false);
-      return;
-    }
+    if (!orderId) return;
 
     getOrder(orderId)
       .then((data) => setOrder(data))

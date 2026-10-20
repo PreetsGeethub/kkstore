@@ -54,7 +54,7 @@ def rewrite_query(
         },
     ]
 
-    response = ask_ollama(messages)
+    response = ask_llm(messages)
 
     rewritten_query = response.message.content.strip()
 

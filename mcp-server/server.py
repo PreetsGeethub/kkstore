@@ -14,11 +14,22 @@ load_dotenv()
 BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:5000").rstrip("/")
 AUTHKIT_DOMAIN = os.getenv("AUTHKIT_DOMAIN", "").rstrip("/")
 MCP_RESOURCE_URL = os.getenv("MCP_RESOURCE_URL", "").rstrip("/")
+ALLOWED_WORKOS_SUBJECTS = frozenset(
+    subject.strip()
+    for subject in os.getenv("ALLOWED_WORKOS_SUBJECTS", "").split(",")
+    if subject.strip()
+)
 
 if not AUTHKIT_DOMAIN or not MCP_RESOURCE_URL:
     raise RuntimeError(
         "AUTHKIT_DOMAIN and MCP_RESOURCE_URL must be configured. "
         "Refusing to start the MCP server without authentication settings."
+    )
+
+if not ALLOWED_WORKOS_SUBJECTS:
+    raise RuntimeError(
+        "ALLOWED_WORKOS_SUBJECTS must contain at least one WorkOS user ID. "
+        "Refusing to start without an explicit user allowlist."
     )
 
 if not AUTHKIT_DOMAIN.startswith("https://") or not MCP_RESOURCE_URL.startswith("https://"):
@@ -46,6 +57,10 @@ class WorkOSTokenVerifier(TokenVerifier):
             )
         except Exception:
             # Fail closed for invalid tokens and JWKS/network failures.
+            return None
+
+        # A valid token is not enough: only explicitly approved WorkOS users may use this server.
+        if claims["sub"] not in ALLOWED_WORKOS_SUBJECTS:
             return None
 
         audience = claims.get("aud")

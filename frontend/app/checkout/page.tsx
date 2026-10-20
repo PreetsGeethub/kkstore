@@ -48,7 +48,6 @@ export default function CheckoutPage() {
   // Load saved addresses for logged-in users
   useEffect(() => {
     if (!user) return;
-    setLoadingAddresses(true);
     getAddresses()
       .then((addrs) => {
         setSavedAddresses(addrs);

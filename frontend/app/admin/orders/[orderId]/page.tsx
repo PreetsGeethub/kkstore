@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Loader2, Package, User, CreditCard } from "lucide-react";
 import { getAdminOrderById, updateOrderStatus } from "@/lib/adminOrderApi";
@@ -20,25 +20,55 @@ const STATUS_OPTIONS = [
     "REPLACEMENT_REJECTED",
   ];
 
+type OrderItem = {
+  productName: string;
+  color: string;
+  size: string;
+  quantity: number;
+  lineTotal: number;
+};
+
+type AdminOrder = {
+  id: string;
+  orderNumber: string;
+  status: string;
+  createdAt: string;
+  user: { firstName: string; lastName: string; email: string; phone?: string | null } | null;
+  guestEmail?: string | null;
+  shippingFullName: string;
+  shippingPhone: string;
+  shippingAddressLine1: string;
+  shippingAddressLine2?: string | null;
+  shippingCity: string;
+  shippingState: string;
+  shippingPostalCode: string;
+  payment?: { paymentMethod?: string | null; paymentStatus: string; transactionId?: string | null } | null;
+  orderItems?: OrderItem[];
+  subtotal: number;
+  discountAmount: number;
+  shippingCost: number;
+  totalAmount: number;
+};
+
 export default function AdminOrderDetailPage() {
   const params = useParams();
   const orderId = params.orderId as string;
   const { showToast } = useToast();
 
-  const [order, setOrder] = useState<any>(null);
+  const [order, setOrder] = useState<AdminOrder | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
 
-  const load = () => {
+  const load = useCallback(() => {
     getAdminOrderById(orderId)
       .then(setOrder)
       .catch(() => setOrder(null))
       .finally(() => setLoading(false));
-  };
+  }, [orderId]);
 
   useEffect(() => {
     load();
-  }, [orderId]);
+  }, [load]);
 
   const handleStatusChange = async (newStatus: string) => {
     setUpdating(true);
@@ -148,7 +178,7 @@ export default function AdminOrderDetailPage() {
           Items
         </h2>
         <div className="space-y-2">
-          {order.orderItems?.map((item: any, i: number) => (
+          {order.orderItems?.map((item, i) => (
             <div key={i} className="flex justify-between font-sans text-sm text-[#4A4A4A]">
               <span>
                 {item.productName} ({item.color}, {item.size}) × {item.quantity}

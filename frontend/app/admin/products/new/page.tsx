@@ -219,7 +219,7 @@ export default function NewProductPage() {
   Variants (Color / Size / Price / Stock)
 </h2>
 <p className="mt-1 font-sans text-[10px] text-[#4A4A4A]">
-  Compare Price is optional — if set, it must be equal to or higher than Price (it represents the "original" price before discount).
+  Compare Price is optional — if set, it must be equal to or higher than Price (it represents the &quot;original&quot; price before discount).
 </p>
           <button type="button" onClick={addVariant} className="flex items-center gap-1 font-sans text-[10px] uppercase text-[#B08D57] hover:underline">
             <Plus size={12} strokeWidth={1.5} /> Add Variant

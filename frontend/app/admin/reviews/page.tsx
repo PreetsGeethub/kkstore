@@ -10,6 +10,7 @@ type Review = {
   rating: number;
   title?: string | null;
   comment?: string | null;
+  isVerifiedPurchase: boolean;
   createdAt: string;
   user?: { firstName?: string | null; lastName?: string | null; email?: string | null } | null;
   product?: { name?: string | null } | null;

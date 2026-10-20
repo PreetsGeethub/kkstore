@@ -42,7 +42,7 @@ jobs:
 
       - name: Run automated tests
         working-directory: mcp-server
-        run: python -m pytest -v
+        run: python -m pytest -v tests/
 
       - name: Compile Python source
         working-directory: mcp-server

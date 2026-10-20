@@ -34,6 +34,8 @@ export default function AdminReviewsPage() {
 
   useEffect(() => {
     load();
+    // Search is intentionally submitted manually; only rating changes auto-refresh.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ratingFilter]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {

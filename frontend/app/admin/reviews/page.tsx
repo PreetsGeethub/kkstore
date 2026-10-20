@@ -5,20 +5,29 @@ import { Loader2, Star, Trash2, Search, BadgeCheck } from "lucide-react";
 import { getAllReviews, deleteAdminReview } from "@/lib/adminReviewApi";
 import { useToast } from "@/components/Toast";
 
+type Review = {
+  id: string;
+  rating: number;
+  title?: string | null;
+  comment?: string | null;
+  createdAt: string;
+  user?: { firstName?: string | null; lastName?: string | null; email?: string | null } | null;
+  product?: { name?: string | null } | null;
+};
+
 const RATING_OPTIONS = ["all", "5", "4", "3", "2", "1"];
 
 export default function AdminReviewsPage() {
   const { showToast } = useToast();
-  const [reviews, setReviews] = useState<any[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [ratingFilter, setRatingFilter] = useState("all");
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const load = () => {
-    setLoading(true);
     getAllReviews({ search, rating: ratingFilter })
-      .then(({ reviews }) => setReviews(reviews))
+      .then(({ reviews }) => setReviews(reviews as Review[]))
       .catch(() => setReviews([]))
       .finally(() => setLoading(false));
   };
@@ -29,6 +38,7 @@ export default function AdminReviewsPage() {
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
     load();
   };
 
@@ -74,7 +84,10 @@ export default function AdminReviewsPage() {
 
         <select
           value={ratingFilter}
-          onChange={(e) => setRatingFilter(e.target.value)}
+          onChange={(e) => {
+            setLoading(true);
+            setRatingFilter(e.target.value);
+          }}
           className="border border-[#E8D8C5] bg-white px-3 py-2 font-sans text-sm text-[#2A1E17] outline-none focus:border-[#B08D57]"
         >
           {RATING_OPTIONS.map((r) => (

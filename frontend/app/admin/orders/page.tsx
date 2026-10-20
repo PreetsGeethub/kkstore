@@ -52,7 +52,9 @@ export default function AdminOrdersPage() {
 
   useEffect(() => {
     load();
-  }, [load]);
+    // Search is intentionally submitted manually; only status changes auto-refresh.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statusFilter]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();

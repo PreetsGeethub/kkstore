@@ -234,6 +234,23 @@ Open `http://localhost:3000`. The AI service exposes `GET /health/live`; the Nod
 
 > **Local setup note:** This repository still relies on environment-specific backend configuration and pre-indexed Qdrant data. If you are setting it up from a fresh clone, complete those prerequisites before treating the local setup as reproducible.
 
+### Resource-limited AI container (optional)
+
+The AI service has a standalone Compose definition at `ai/compose.yaml`. It intentionally manages **only the AI container**; it does not create, modify, or reuse the VPS's existing Redis, Qdrant, ERPNext, or lead-generation containers.
+
+From the repository root, first create and configure `ai/.env` using `ai/.env.example`. When the AI container needs to reach services running directly on the Docker host, configure their URLs using `http://host.docker.internal:<port>` (the Compose file adds the host-gateway mapping). If Redis or Qdrant run elsewhere, use their reachable private service URLs instead. Do not assume the VPS's existing Redis instances are safe to share with this application.
+
+Review the configured endpoints and credentials before starting the container. Then run:
+
+```bash
+docker compose -f ai/compose.yaml config
+docker compose -f ai/compose.yaml up -d --build
+docker compose -f ai/compose.yaml ps
+docker compose -f ai/compose.yaml logs --tail=100 ai
+```
+
+The service has a **1.5 GiB memory cap**, **1.5 CPU limit**, **256-process limit**, bounded JSON log rotation, and a liveness health check. The host port is bound to `127.0.0.1:8000`, so it is not exposed directly on every network interface; use a trusted reverse proxy if external access is required. These limits are initial guardrails, not a guarantee that every model/retrieval workload fits. Monitor peak memory during cold model loading and representative requests before using the configuration in production. This file does not configure memory limits for other existing containers and does not deploy anything by itself.
+
 ## Security notes
 
 - Keep API keys, database credentials, JWT secrets, and local `.env` files out of version control.

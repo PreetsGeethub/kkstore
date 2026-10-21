@@ -39,18 +39,6 @@ const [products, setProducts] = useState<AIProduct[]>([]);
   }, []);
 
   useEffect(() => {
-    if (!isIntroActive) return;
-
-    const timeoutId = window.setTimeout(() => {
-      window.sessionStorage.setItem("kk-ai-intro-seen", "true");
-      setIsIntroActive(false);
-      setIsWelcomeVisible(true);
-    }, 4600);
-
-    return () => window.clearTimeout(timeoutId);
-  }, [isIntroActive]);
-
-  useEffect(() => {
     if (!isOpen) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {

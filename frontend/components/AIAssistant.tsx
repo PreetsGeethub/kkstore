@@ -23,10 +23,7 @@ const [error, setError] = useState<string | null>(null);
 const [products, setProducts] = useState<AIProduct[]>([]);
 
   useEffect(() => {
-    if (isOpen) {
-      setIsWelcomeVisible(false);
-      return;
-    }
+    if (isOpen) return;
 
     if (window.sessionStorage.getItem("kk-ai-welcome-dismissed") === "true") {
       return;

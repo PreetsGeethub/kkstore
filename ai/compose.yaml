@@ -11,7 +11,7 @@ services:
       - .env
     ports:
       # Keep the AI API private on the host; expose it through a trusted reverse proxy if needed.
-      - "127.0.0.1:8000:8000"
+      - "127.0.0.1:8010:8000"
     extra_hosts:
       # Allows BACKEND_URL/REDIS_URL/QDRANT_URL to target host services when configured accordingly.
       - "host.docker.internal:host-gateway"

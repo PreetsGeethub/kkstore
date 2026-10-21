@@ -1,0 +1,37 @@
+services:
+  ai:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: kkstore-ai:local
+    container_name: kkstore-ai
+    restart: unless-stopped
+    init: true
+    env_file:
+      - .env
+    ports:
+      # Keep the AI API private on the host; expose it through a trusted reverse proxy if needed.
+      - "127.0.0.1:8000:8000"
+    extra_hosts:
+      # Allows BACKEND_URL/REDIS_URL/QDRANT_URL to target host services when configured accordingly.
+      - "host.docker.internal:host-gateway"
+    mem_limit: 1536m
+    cpus: 1.5
+    pids_limit: 256
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/live', timeout=3)"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 90s

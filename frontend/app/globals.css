@@ -78,3 +78,90 @@ h1, h2, h3, h4, h5, h6 {
     transform: translateY(-10px);
   }
 }
+
+/* KK's first-visit, center-stage robot introduction */
+@keyframes kk-intro-backdrop-in {
+  from { opacity: 0; backdrop-filter: blur(0); }
+  to { opacity: 1; backdrop-filter: blur(5px); }
+}
+@keyframes kk-robot-arrive {
+  0% { opacity: 0; transform: translate(-34vw, 42vh) scale(.12) rotate(-18deg); }
+  58% { opacity: 1; transform: translate(0, -8px) scale(1.06) rotate(3deg); }
+  76% { transform: translate(0, 4px) scale(.98) rotate(-1deg); }
+  100% { opacity: 1; transform: translate(0, 0) scale(1) rotate(0); }
+}
+@keyframes kk-robot-hover {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  50% { transform: translateY(-7px) rotate(1deg); }
+}
+@keyframes kk-robot-wave {
+  0%, 45%, 100% { transform: rotate(0); transform-origin: 151px 158px; }
+  10%, 25% { transform: rotate(-17deg); transform-origin: 151px 158px; }
+  18%, 34% { transform: rotate(8deg); transform-origin: 151px 158px; }
+}
+@keyframes kk-robot-halo {
+  0% { opacity: 0; transform: scale(.7); }
+  70% { opacity: .8; transform: scale(1.04); }
+  100% { opacity: .55; transform: scale(1); }
+}
+@keyframes kk-intro-copy-in {
+  0%, 42% { opacity: 0; transform: translateY(18px) scale(.98); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+.kk-intro-backdrop {
+  background: rgba(250, 247, 242, .92);
+  animation: kk-intro-backdrop-in .45s ease-out both;
+}
+.kk-intro-orb {
+  position: absolute;
+  width: min(64vw, 27rem);
+  aspect-ratio: 1;
+  border-radius: 9999px;
+  filter: blur(1px);
+  pointer-events: none;
+}
+.kk-intro-orb-one {
+  background: radial-gradient(circle, rgba(201, 169, 110, .24), rgba(201, 169, 110, 0) 70%);
+  animation: kk-robot-halo 1.1s ease-out both;
+}
+.kk-intro-orb-two {
+  width: min(90vw, 42rem);
+  background: radial-gradient(circle, rgba(232, 216, 197, .22), rgba(232, 216, 197, 0) 70%);
+  animation: kk-robot-halo 1.4s .15s ease-out both;
+}
+.kk-robot-arrival {
+  animation: kk-robot-arrive 1.05s cubic-bezier(.2,.85,.25,1.15) both;
+}
+.kk-robot-model {
+  animation: kk-robot-hover 3s 1.1s ease-in-out infinite;
+}
+.kk-robot-wave {
+  animation: kk-robot-wave 2.4s 1.1s ease-in-out infinite;
+}
+.kk-robot-halo {
+  background: radial-gradient(circle, rgba(201, 169, 110, .24), rgba(201, 169, 110, 0) 68%);
+  animation: kk-robot-halo 1.2s .25s ease-out both;
+}
+.kk-intro-copy {
+  animation: kk-intro-copy-in .65s .1s ease-out both;
+}
+@media (max-width: 640px) {
+  @keyframes kk-robot-arrive {
+    0% { opacity: 0; transform: translate(-36vw, 25vh) scale(.1) rotate(-18deg); }
+    58% { opacity: 1; transform: translate(0, -6px) scale(1.04) rotate(2deg); }
+    78% { transform: translate(0, 3px) scale(.99) rotate(-1deg); }
+    100% { opacity: 1; transform: translate(0, 0) scale(1) rotate(0); }
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kk-intro-backdrop,
+  .kk-intro-orb,
+  .kk-robot-arrival,
+  .kk-robot-model,
+  .kk-robot-wave,
+  .kk-robot-halo,
+  .kk-intro-copy {
+    animation: none !important;
+    transform: none !important;
+  }
+}

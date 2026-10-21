@@ -129,11 +129,12 @@ const [products, setProducts] = useState<AIProduct[]>([]);
                 <ellipse cx="110" cy="211" rx="54" ry="10" fill="#2A1E17" opacity=".12" />
                 <path d="M110 18V34" stroke="url(#kk-gold)" strokeWidth="7" strokeLinecap="round" />
                 <circle cx="110" cy="13" r="9" fill="url(#kk-gold)" />
-                <path d="M70 151C54 155 47 170 48 186L52 198C54 205 63 207 68 201L82 179" fill="url(#kk-shell)" stroke="#B9B2A9" strokeWidth="2" />
                 <g className="kk-robot-wave">
-                  <path d="M149 151C166 150 178 160 181 175L184 187C185 195 176 201 170 195L155 179" fill="url(#kk-shell)" stroke="#B9B2A9" strokeWidth="2" />
-                  <circle cx="184" cy="186" r="9" fill="url(#kk-gold)" />
+                  <path d="M70 151C54 155 47 170 48 186L52 198C54 205 63 207 68 201L82 179" fill="url(#kk-shell)" stroke="#B9B2A9" strokeWidth="2" />
+                  <circle cx="53" cy="198" r="9" fill="url(#kk-gold)" />
                 </g>
+                <path d="M149 151C166 150 178 160 181 175L184 187C185 195 176 201 170 195L155 179" fill="url(#kk-shell)" stroke="#B9B2A9" strokeWidth="2" />
+                <circle cx="184" cy="186" r="9" fill="url(#kk-gold)" />
                 <rect x="57" y="33" width="106" height="105" rx="34" fill="url(#kk-shell)" stroke="#C9C1B7" strokeWidth="2" />
                 <rect x="65" y="48" width="90" height="72" rx="25" fill="url(#kk-face)" />
                 <path d="M78 59C91 51 127 51 142 60" stroke="#FFFFFF" strokeOpacity=".18" strokeWidth="3" strokeLinecap="round" />

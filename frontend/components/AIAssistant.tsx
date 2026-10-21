@@ -5,6 +5,7 @@ import { Bot, X, Send } from "lucide-react";
 import { sendAIMessage, type AIProduct } from "@/lib/aiApi";
 export default function AIAssistant() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isWelcomeVisible, setIsWelcomeVisible] = useState(false);
   const [message, setMessage] = useState("");
 
   const [messages, setMessages] = useState<
@@ -22,6 +23,23 @@ const [error, setError] = useState<string | null>(null);
 const [products, setProducts] = useState<AIProduct[]>([]);
 
   useEffect(() => {
+    if (isOpen) {
+      setIsWelcomeVisible(false);
+      return;
+    }
+
+    if (window.sessionStorage.getItem("kk-ai-welcome-dismissed") === "true") {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setIsWelcomeVisible(true);
+    }, 1200);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [isOpen]);
+
+  useEffect(() => {
     if (!isOpen) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -37,24 +55,66 @@ const [products, setProducts] = useState<AIProduct[]>([]);
     };
   }, [isOpen]);
 
+  const openAssistant = () => {
+    window.sessionStorage.setItem("kk-ai-welcome-dismissed", "true");
+    setIsWelcomeVisible(false);
+    setIsOpen(true);
+  };
+
+  const dismissWelcome = () => {
+    window.sessionStorage.setItem("kk-ai-welcome-dismissed", "true");
+    setIsWelcomeVisible(false);
+  };
+
   return (
     <>
-      {/* Floating AI button */}
+      {/* Friendly KK robot launcher — opposite WhatsApp */}
+      {!isOpen && isWelcomeVisible && (
+        <div className="fixed bottom-24 left-5 z-40 w-[min(19rem,calc(100vw-2.5rem))] animate-in fade-in slide-in-from-bottom-2 duration-300 sm:bottom-28 sm:left-8">
+          <div className="relative border border-[#E8D8C5] bg-[#FAF7F2] p-4 pr-10 shadow-[0_12px_35px_rgba(42,30,23,0.16)]">
+            <button
+              type="button"
+              onClick={dismissWelcome}
+              aria-label="Dismiss KK welcome message"
+              className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center text-[#9A8F86] transition-colors hover:text-[#2A1E17] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B08D57]"
+            >
+              <X size={15} />
+            </button>
+            <button
+              type="button"
+              onClick={openAssistant}
+              className="block w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B08D57]"
+            >
+              <span className="mb-1 block font-[var(--font-playfair)] text-base text-[#2A1E17]">
+                Hey, I’m KK! <span aria-hidden="true">🤖</span>
+              </span>
+              <span className="block font-sans text-sm leading-5 text-[#4A4A4A]">
+                How can I help you today? I can help you find something special.
+              </span>
+              <span className="mt-3 inline-flex items-center gap-1 font-sans text-[10px] uppercase tracking-[0.18em] text-[#8A693E]">
+                Chat with me <span aria-hidden="true">→</span>
+              </span>
+            </button>
+            <span aria-hidden="true" className="absolute -bottom-2 left-7 h-4 w-4 rotate-45 border-b border-r border-[#E8D8C5] bg-[#FAF7F2]" />
+          </div>
+        </div>
+      )}
+
       <button
         type="button"
-        onClick={() => setIsOpen(true)}
-        aria-label="Open KK Store AI Assistant"
-        className={`fixed bottom-6 right-6 z-40 flex h-14 items-center gap-3 border border-[#B08D57] bg-[#2A1E17] px-5 text-[#FAF7F2] shadow-[0_8px_30px_rgba(42,30,23,0.18)] transition-all duration-300 hover:-translate-y-1 hover:bg-[#3A2A20] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B08D57] ${
+        onClick={openAssistant}
+        aria-label="Open KK, your shopping assistant"
+        aria-hidden={isOpen}
+        tabIndex={isOpen ? -1 : 0}
+        className={`fixed bottom-6 left-5 z-40 flex h-16 w-16 flex-col items-center justify-center rounded-full border border-[#B08D57] bg-[#2A1E17] text-[#FAF7F2] shadow-[0_8px_30px_rgba(42,30,23,0.24)] transition-all duration-300 hover:-translate-y-1 hover:bg-[#3A2A20] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B08D57] sm:bottom-8 sm:left-8 ${
           isOpen
             ? "pointer-events-none scale-95 opacity-0"
             : "scale-100 opacity-100"
         }`}
       >
-        <Bot size={18} strokeWidth={1.5} />
-
-        <span className="font-sans text-[10px] uppercase tracking-[0.25em]">
-          AI Assistant
-        </span>
+        <Bot size={27} strokeWidth={1.6} />
+        <span className="mt-0.5 font-sans text-[9px] font-semibold tracking-[0.2em]">KK</span>
+        <span aria-hidden="true" className="absolute right-0 top-0 h-3.5 w-3.5 rounded-full border-2 border-[#FAF7F2] bg-[#8CBA8F]" />
       </button>
 
       {/* Backdrop */}
@@ -72,8 +132,8 @@ const [products, setProducts] = useState<AIProduct[]>([]);
       <aside
         aria-label="KK Store AI Assistant"
         aria-hidden={!isOpen}
-        className={`fixed right-0 top-0 z-50 flex h-full w-full max-w-md flex-col border-l border-[#E8D8C5] bg-[#FAF7F2] shadow-[-15px_0_40px_rgba(42,30,23,0.10)] transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-          isOpen ? "translate-x-0" : "translate-x-full"
+        className={`fixed left-0 top-0 z-50 flex h-full w-full max-w-md flex-col border-r border-[#E8D8C5] bg-[#FAF7F2] shadow-[15px_0_40px_rgba(42,30,23,0.10)] transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+          isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         {/* Header */}

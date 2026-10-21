@@ -86,6 +86,7 @@ async def run_shopping_agent(
     user_prompt: str,
     access_token: str | None,
     conversation_id: str,
+    owner_id: str,
 ):
     """Run one shopping-assistant turn with bounded LLM calls."""
 
@@ -133,7 +134,7 @@ async def run_shopping_agent(
         ),
     }
 
-    messages = await get_conversation(conversation_id)
+    messages = await get_conversation(owner_id, conversation_id)
 
     if not messages:
         messages = [system_message]
@@ -182,7 +183,7 @@ async def run_shopping_agent(
                 "content": content,
             })
 
-            await save_conversation(conversation_id, messages)
+            await save_conversation(owner_id, conversation_id, messages)
 
             return {
                 "message": content,

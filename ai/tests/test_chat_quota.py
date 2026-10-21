@@ -21,7 +21,7 @@ def test_chat_handles_quota_failures_without_calling_provider(
     expected_status,
     expected_retry_after,
 ):
-    async def empty_conversation(_conversation_id):
+    async def empty_conversation(_owner_id, _conversation_id):
         return []
 
     monkeypatch.setattr(

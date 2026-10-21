@@ -1,12 +1,16 @@
 
 import logging
+import re
+import secrets
 import uuid
 
-from fastapi import Cookie, FastAPI, HTTPException
+from fastapi import Cookie, FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.agents.shopping_agent import run_shopping_agent
-from app.config import AI_ALLOWED_ORIGINS
+from app.auth import resolve_authenticated_owner
+from app.config import AI_ALLOWED_ORIGINS, AI_ENV
+from app.conversation import guest_owner_id
 from app.llm.quota import (
     LLMQuotaExceeded,
     LLMQuotaUnavailable,
@@ -14,6 +18,10 @@ from app.llm.quota import (
 from app.schemas.chat import ChatRequest, ChatResponse
 
 logger = logging.getLogger(__name__)
+
+GUEST_SESSION_COOKIE = "kk_ai_guest_session"
+GUEST_SESSION_MAX_AGE = 60 * 60 * 24 * 30
+_GUEST_SESSION_PATTERN = re.compile(r"^[A-Za-z0-9_-]{43}$")
 
 app = FastAPI(
     title="KK Store AI Assistant",
@@ -43,8 +51,35 @@ async def health_live():
 @app.post("/chat", response_model=ChatResponse)
 async def chat(
     request: ChatRequest,
+    response: Response,
     accessToken: str | None = Cookie(default=None),
+    kk_ai_guest_session: str | None = Cookie(default=None),
 ):
+    # Customer identity is verified by the Node backend. The request body
+    # never supplies an owner ID.
+    owner_id = await resolve_authenticated_owner(accessToken)
+
+    if owner_id is None:
+        guest_session = kk_ai_guest_session
+        if (
+            not guest_session
+            or not _GUEST_SESSION_PATTERN.fullmatch(guest_session)
+        ):
+            guest_session = secrets.token_urlsafe(32)
+            response.set_cookie(
+                key=GUEST_SESSION_COOKIE,
+                value=guest_session,
+                max_age=GUEST_SESSION_MAX_AGE,
+                path="/",
+                httponly=True,
+                secure=AI_ENV == "production",
+                samesite="none" if AI_ENV == "production" else "lax",
+            )
+
+        owner_id = guest_owner_id(guest_session)
+
+    # Preserve the existing UUID conversation flow. Ownership is enforced by
+    # the Redis namespace, so another owner using the same UUID sees no history.
     conversation_id = str(request.conversation_id or uuid.uuid4())
 
     try:
@@ -52,6 +87,7 @@ async def chat(
             request.message,
             access_token=accessToken,
             conversation_id=conversation_id,
+            owner_id=owner_id,
         )
 
     except LLMQuotaExceeded as exc:

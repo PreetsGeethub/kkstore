@@ -61,6 +61,7 @@ def test_shopping_agent_never_exceeds_three_llm_calls():
                 user_prompt="Find rings",
                 access_token=None,
                 conversation_id="test-conversation",
+                owner_id="guest:test-owner",
             )
 
         assert mocked_llm.call_count == 3

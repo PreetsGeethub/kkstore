@@ -15,6 +15,7 @@ def _csv_env(name: str, default: str) -> list[str]:
 
 
 BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:5000").rstrip("/")
+AI_ENV = os.getenv("AI_ENV", os.getenv("ENVIRONMENT", "development")).strip().lower()
 LLM_PROVIDER = os.getenv("LLM_PROVIDER", "ollama").strip().lower()
 LLM_TIMEOUT_SECONDS = float(
     os.getenv("LLM_TIMEOUT_SECONDS", os.getenv("OLLAMA_TIMEOUT_SECONDS", "120"))

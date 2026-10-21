@@ -216,7 +216,7 @@ const [products, setProducts] = useState<AIProduct[]>([]);
         aria-label="Open KK, your shopping assistant"
         aria-hidden={isOpen}
         tabIndex={isOpen ? -1 : 0}
-        className={`fixed bottom-6 left-5 z-40 flex h-16 w-16 flex-col items-center justify-center rounded-full border border-[#B08D57] bg-[#2A1E17] text-[#FAF7F2] shadow-[0_8px_30px_rgba(42,30,23,0.24)] transition-all duration-300 hover:-translate-y-1 hover:bg-[#3A2A20] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B08D57] sm:bottom-8 sm:left-8 ${
+        className={`kk-launcher-glow group fixed bottom-6 left-5 z-40 flex h-16 w-16 flex-col items-center justify-center rounded-full border border-[#B08D57] bg-[#2A1E17] text-[#FAF7F2] shadow-[0_8px_30px_rgba(42,30,23,0.24)] transition-all duration-300 hover:-translate-y-1 hover:bg-[#3A2A20] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B08D57] sm:bottom-8 sm:left-8 ${
           isOpen
             ? "pointer-events-none scale-95 opacity-0"
             : "scale-100 opacity-100"
@@ -225,6 +225,13 @@ const [products, setProducts] = useState<AIProduct[]>([]);
         <Bot size={27} strokeWidth={1.6} />
         <span className="mt-0.5 font-sans text-[9px] font-semibold tracking-[0.2em]">KK</span>
         <span aria-hidden="true" className="absolute right-0 top-0 h-3.5 w-3.5 rounded-full border-2 border-[#FAF7F2] bg-[#8CBA8F]" />
+        <span
+          role="tooltip"
+          className="pointer-events-none absolute bottom-1 left-full ml-3 w-64 translate-x-2 border border-[#E8D8C5] bg-[#FAF7F2] px-4 py-3 text-left opacity-0 shadow-[0_12px_35px_rgba(42,30,23,0.16)] transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100"
+        >
+          <span className="block font-[var(--font-playfair)] text-base text-[#2A1E17]">Hey, I’m KK! <span aria-hidden="true">🤖</span></span>
+          <span className="mt-1 block font-sans text-xs leading-5 text-[#4A4A4A]">How can I help you today?</span>
+        </span>
       </button>
 
       {/* Backdrop */}

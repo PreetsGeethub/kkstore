@@ -202,7 +202,7 @@ async def run_shopping_agent(
                 "content": final_message,
             })
 
-            await save_conversation(conversation_id, messages)
+            await save_conversation(owner_id, conversation_id, messages)
 
             return {
                 "message": final_message,
@@ -339,7 +339,7 @@ async def run_shopping_agent(
                 "content": final_message,
             })
 
-            await save_conversation(conversation_id, messages)
+            await save_conversation(owner_id, conversation_id, messages)
 
             return {
                 "message": final_message,

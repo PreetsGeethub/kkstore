@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Loader2, Search } from "lucide-react";
 import { getAllOrders } from "@/lib/adminOrderApi";
@@ -28,26 +28,37 @@ const statusColor: Record<string, string> = {
     REPLACEMENT_APPROVED: "text-[#7A9B76] bg-[#7A9B76]/10",
     REPLACEMENT_REJECTED: "text-[#B5654F] bg-[#B5654F]/10",
   };
+type Order = {
+  id: string;
+  orderNumber: string;
+  status: string;
+  totalAmount: number;
+  createdAt: string;
+  user: { firstName: string; lastName: string } | null;
+};
+
 export default function AdminOrdersPage() {
-  const [orders, setOrders] = useState<any[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
-  const load = () => {
-    setLoading(true);
+  const load = useCallback(() => {
     getAllOrders({ search, status: statusFilter })
-      .then(({ orders }) => setOrders(orders))
+      .then(({ orders }) => setOrders(orders as Order[]))
       .catch(() => setOrders([]))
       .finally(() => setLoading(false));
-  };
+  }, [search, statusFilter]);
 
   useEffect(() => {
     load();
+    // Search is intentionally submitted manually; only status changes auto-refresh.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
     load();
   };
 
@@ -74,7 +85,10 @@ export default function AdminOrdersPage() {
 
         <select
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
+          onChange={(e) => {
+            setLoading(true);
+            setStatusFilter(e.target.value);
+          }}
           className="border border-[#E8D8C5] bg-white px-3 py-2 font-sans text-sm text-[#2A1E17] outline-none focus:border-[#B08D57]"
         >
           {STATUS_OPTIONS.map((s) => (

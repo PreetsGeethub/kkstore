@@ -15,9 +15,20 @@ const emptyForm = {
   expiresAt: "",
 };
 
+type Coupon = {
+  id: string;
+  code: string;
+  discountType: "PERCENTAGE" | "FIXED";
+  discountValue: number;
+  minimumOrderAmount?: number | null;
+  usedCount: number;
+  usageLimit?: number | null;
+  isActive: boolean;
+};
+
 export default function AdminCouponsPage() {
   const { showToast } = useToast();
-  const [coupons, setCoupons] = useState<any[]>([]);
+  const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(emptyForm);

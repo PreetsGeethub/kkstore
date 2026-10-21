@@ -113,7 +113,10 @@ export default function Navbar() {
   // FIX #2: close both the mobile menu AND the mega menu on route change.
   // Previously only menuOpen reset, so the mega menu could stay stuck
   // open after clicking a category link.
+  // Route changes intentionally reset menu UI state; this is a valid
+  // synchronization effect for navigation state.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMenuOpen(false);
     setCollectionsOpen(false);
   }, [pathname, searchParams]);

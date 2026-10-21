@@ -15,14 +15,13 @@ const tabs: { id: Tab; label: string; sortParam: string }[] = [
 ];
 
 export default function ProductShowcase() {
-  const [activeTab, setActiveTab] = useState<Tab>("new");
+  const [activeTab] = useState<Tab>("new");
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
   const activeMeta = tabs.find((t) => t.id === activeTab)!;
 
   useEffect(() => {
-    setLoading(true);
     getProducts({ sortBy: "createdAt", order: "desc", limit: 4 })
       .then(({ products: apiProducts }) => setProducts(apiProducts.map(listItemToCardProduct)))
       .catch(() => setProducts([]))

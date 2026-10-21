@@ -6,7 +6,6 @@ import { Plus, Trash2, Loader2 } from "lucide-react";
 import { getProductById } from "@/lib/productApi";
 import { getCategories, updateProduct } from "@/lib/adminApi";
 import { useToast } from "@/components/Toast";
-import type { ChangeEvent } from "react";
 
 type Category = { id: string; name: string };
 type ProductForm = {
@@ -46,7 +45,7 @@ export default function EditProductPage() {
   const [variants, setVariants] = useState<VariantForm[]>([{ ...emptyVariant }]);
 
   useEffect(() => {
-    if (!productId) { setLoading(false); return; }
+    if (!productId) return;
 
     Promise.all([getProductById(productId), getCategories().catch(() => [])]).then(
       ([product, cats]) => {

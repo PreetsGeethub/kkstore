@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+ollama
+httpx
+pydantic>=2
+redis
+qdrant-client
+sentence-transformers
+python-dotenv
+openai

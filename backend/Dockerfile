@@ -1,25 +1,28 @@
-# Use Node.js 22
 FROM node:22-slim
 
-# Set the working directory inside the container
 WORKDIR /app
 
-# Copy package files first
 COPY package*.json ./
 
-# Install OpenSSL required by Prisma
-RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
-# Install production dependencies
-RUN npm ci --omit=dev
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends openssl \
+    && rm -rf /var/lib/apt/lists/* \
+    && npm ci --omit=dev
 
-# Copy Prisma schema
+# Prisma 7 reads DIRECT_URL from prisma.config.js while generating the client.
+# This placeholder is for generation only; runtime uses DATABASE_URL.
 COPY prisma ./prisma
+COPY prisma.config.js ./prisma.config.js
+RUN DIRECT_URL="postgresql://ci:ci@127.0.0.1:5432/ci" npx prisma generate
 
-# Generate Prisma Client
-RUN npx prisma generate
-
-# Copy the application source code
 COPY src ./src
 
-# Start the application
+ENV NODE_ENV=production
+EXPOSE 5000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+  CMD node -e "fetch('http://127.0.0.1:5000/health/live').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
+
+USER node
+
 CMD ["npm", "start"]

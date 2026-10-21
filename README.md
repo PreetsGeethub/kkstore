@@ -15,7 +15,7 @@ The project combines a Next.js storefront, a Node.js/Express application backend
 - **Authenticated order lookup:** Retrieve the signed-in customer's orders through the existing backend authentication flow.
 - **Policy Q&A with RAG:** Answer questions about shipping, returns, payments, warranty, and product care using retrieved store documentation.
 - **Retrieval and reranking:** Retrieve relevant knowledge passages, rerank candidates, and prepare context for generation.
-- **Multi-turn conversation state:** Store conversation messages in Redis with a one-hour TTL.
+- **Multi-turn conversation state:** Store conversation messages in Redis with a one-hour TTL, scoped to a verified customer identity or a hashed guest-session identifier to prevent cross-user history sharing.
 
 ## Architecture
 
@@ -26,7 +26,7 @@ flowchart TD
     AI --> AG[Shopping agent]
     AG -->|Product and order tools| BE[Node.js / Express API]
     BE --> DB[(PostgreSQL via Prisma)]
-    AG -->|LLM requests and tool calls| LLM[Ollama — Qwen3 4B]
+    AG -->|LLM requests and tool calls| LLM[Configured LLM provider: OpenRouter or Ollama]
     AG -->|Policy question| RAG[RAG pipeline]
     RAG --> EMB[Sentence Transformers embeddings]
     EMB --> Q[(Qdrant vector database)]
@@ -40,7 +40,7 @@ flowchart TD
 - **Next.js frontend:** Renders the storefront and chat UI. The chat sends requests to the FastAPI service.
 - **Node.js/Express backend:** Owns application APIs, business logic, authentication, and access to the store database.
 - **Python/FastAPI AI service:** Orchestrates the agent, model requests, tools, retrieval, and conversation state.
-- **Ollama:** Runs the configured local model, currently `qwen3:4b`, for agent and RAG generation.
+- **LLM provider:** Configurable through `LLM_PROVIDER`. Use OpenRouter for hosted inference (`OPENROUTER_API_KEY`, `OPENROUTER_MODEL`) or Ollama for a local model (`OLLAMA_BASE_URL`, `OLLAMA_MODEL`).
 - **Qdrant and Sentence Transformers:** Support semantic product retrieval and policy-document retrieval.
 - **Redis:** Stores conversation messages for follow-up turns.
 
@@ -69,7 +69,7 @@ These are functional end-to-end checks in the configured local environment; they
 | Application API | Node.js, Express.js |
 | Database | PostgreSQL, Prisma |
 | AI API | Python, FastAPI, Pydantic |
-| Agent / LLM | Ollama, Qwen3 4B, tool calling |
+| Agent / LLM | OpenRouter or Ollama, configurable model, tool calling |
 | Embeddings | Sentence Transformers, `all-MiniLM-L6-v2` |
 | Vector database | Qdrant |
 | Reranking | Sentence Transformers CrossEncoder, `cross-encoder/ms-marco-MiniLM-L-6-v2` |
@@ -105,7 +105,7 @@ The services below assume the default local ports used by the current code:
 | FastAPI AI service | `http://localhost:8000` |
 | Redis | `localhost:6379` |
 | Qdrant | `http://localhost:6333` |
-| Ollama | `localhost:11434` |
+| Ollama (optional local provider) | `localhost:11434` |
 
 ### Prerequisites
 
@@ -136,15 +136,19 @@ If a container with either name already exists, start that container instead of 
 
 The current code expects the Qdrant collections `kkstore_products` and `kkstore_knowledge` to contain indexed data. Make sure the product vectors and policy chunks have been indexed before testing semantic search and policy RAG. A single documented, fresh-clone indexing command is still a setup improvement to make.
 
-### 3. Start Ollama and pull the model
+### 3. Configure the LLM provider
 
-Install Ollama using its official installation instructions, start the Ollama service, and pull the model used by the current agent:
+The AI service supports two providers through `LLM_PROVIDER`:
+
+**OpenRouter (hosted inference)** — set `LLM_PROVIDER=openrouter`, `OPENROUTER_API_KEY`, and `OPENROUTER_MODEL` in `ai/.env`. This avoids running model weights on your development machine or application server. OpenRouter model availability and free-tier limits depend on the selected model/provider.
+
+**Ollama (local inference)** — set `LLM_PROVIDER=ollama`, configure `OLLAMA_BASE_URL` and `OLLAMA_MODEL`, and pull the selected model. For example:
 
 ```bash
 ollama pull qwen3:4b
 ```
 
-The AI service currently calls Ollama directly. Other provider-specific code in the repository should not be assumed to be the active provider for the shopping-agent flow.
+Set only the credentials required by the selected provider, and never commit real keys.
 
 ### 4. Configure and start the Node.js backend
 
@@ -205,7 +209,7 @@ For local development, you can add `--reload`.
 
 ### 6. Index product and policy data in Qdrant
 
-Start the Node backend, Ollama, Redis, and Qdrant first. Then, from the `ai` directory with the Python virtual environment active, run:
+Start the Node backend, the configured LLM provider, Redis, and Qdrant first. Then, from the `ai` directory with the Python virtual environment active, run:
 
 ```bash
 python -m app.index_products
@@ -243,7 +247,7 @@ Open `http://localhost:3000`. The AI service exposes `GET /health/live`; the Nod
 
 - No public AI demo is currently documented; the verified assistant flows run in the configured local environment.
 - Fresh-clone setup still requires backend-specific environment/database setup and pre-indexed Qdrant collections.
-- The active shopping-agent path uses Ollama and the local Qwen3 4B model; deploying to a small server requires a hosted inference option or a separate inference host.
+- The LLM provider is environment-configurable. OpenRouter supports hosted inference; Ollama is available for local inference. Model availability, latency, and provider rate limits vary.
 - Before production use, add automated regression tests for tool calling and RAG, evaluate answer quality against a representative question set, and review logging, error handling, latency, and security.
 - Environment-backed service URLs, environment examples, health endpoints, and repeatable Qdrant collection setup/indexing scripts have been added. These changes still need fresh-clone verification and automated regression coverage before production use.
 

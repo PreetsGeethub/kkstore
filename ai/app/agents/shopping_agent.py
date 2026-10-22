@@ -386,3 +386,43 @@ async def _run_shopping_agent(
             stats=stats,
         )
         llm_calls += 1
+
+
+
+async def run_shopping_agent(
+    user_prompt: str,
+    access_token: str | None,
+    conversation_id: str,
+    owner_id: str,
+):
+    """Run one agent turn and emit a summary of its latency and complexity."""
+    stats = {
+        "llm_calls": 0,
+        "tool_calls": 0,
+        "tool_rounds": 0,
+    }
+    started = time.perf_counter()
+
+    try:
+        return await _run_shopping_agent(
+            user_prompt=user_prompt,
+            access_token=access_token,
+            conversation_id=conversation_id,
+            owner_id=owner_id,
+            stats=stats,
+        )
+    except Exception as exc:
+        log_event(
+            "agent.turn.failed",
+            level=logging.ERROR,
+            duration_ms=round((time.perf_counter() - started) * 1000, 2),
+            error_type=type(exc).__name__,
+            **stats,
+        )
+        raise
+    finally:
+        log_event(
+            "agent.turn.completed",
+            duration_ms=round((time.perf_counter() - started) * 1000, 2),
+            **stats,
+        )

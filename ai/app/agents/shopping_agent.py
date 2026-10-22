@@ -97,11 +97,12 @@ def _add_products(product_results: list, result) -> None:
 
         product_results.append(product)
 
-async def run_shopping_agent(
+async def _run_shopping_agent(
     user_prompt: str,
     access_token: str | None,
     conversation_id: str,
     owner_id: str,
+    stats: dict,
 ):
     """Run one shopping-assistant turn with bounded LLM calls."""
 
@@ -177,9 +178,10 @@ async def run_shopping_agent(
     tool_round = 0
 
     # First LLM request.
-    response = ask_llm(
+    response = _timed_llm_call(
         messages,
         tools=get_ollama_tools(),
+        stats=stats,
     )
     llm_calls += 1
 
@@ -225,6 +227,7 @@ async def run_shopping_agent(
             }
 
         tool_round += 1
+        stats["tool_rounds"] = tool_round
 
         # Preserve the assistant's tool requests in the conversation.
         messages.append({
@@ -362,8 +365,9 @@ async def run_shopping_agent(
             }
 
         # Request the next model response.
-        response = ask_llm(
+        response = _timed_llm_call(
             messages,
             tools=get_ollama_tools(),
+            stats=stats,
         )
         llm_calls += 1

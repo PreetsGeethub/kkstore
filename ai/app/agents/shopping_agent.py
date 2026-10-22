@@ -1,6 +1,7 @@
 
 import json
 import logging
+import time
 from functools import partial
 from app.llm.quota import (
     LLMQuotaExceeded,
@@ -11,6 +12,7 @@ from pydantic import ValidationError
 from app.llm.ollama import get_ollama_tools
 from app.llm.client import ask_llm
 from app.conversation import get_conversation, save_conversation
+from app.observability import log_event
 
 from app.tools.orders import get_my_orders
 from app.tools.products import search_products, get_product_details
@@ -38,6 +40,19 @@ def _tool_error(error_code: str, message: str) -> dict:
         error_code=error_code,
         message=message,
     ).model_dump()
+
+
+def _timed_llm_call(messages, tools, stats: dict):
+    """Call the model and record duration without logging prompt contents."""
+    stats["llm_calls"] += 1
+    started = time.perf_counter()
+    try:
+        response = ask_llm(messages, tools=tools)
+    except Exception as exc:
+        log_event("agent.llm.completed", level=logging.ERROR, call_number=stats["llm_calls"], duration_ms=round((time.perf_counter() - started) * 1000, 2), status="error", error_type=type(exc).__name__)
+        raise
+    log_event("agent.llm.completed", call_number=stats["llm_calls"], duration_ms=round((time.perf_counter() - started) * 1000, 2), status="ok")
+    return response
 
 
 def _parse_tool_arguments(arguments) -> dict:

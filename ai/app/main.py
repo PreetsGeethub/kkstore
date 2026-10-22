@@ -2,6 +2,7 @@
 import logging
 import re
 import secrets
+import time
 import uuid
 
 from fastapi import Cookie, FastAPI, HTTPException, Response
@@ -16,6 +17,7 @@ from app.llm.quota import (
     LLMQuotaUnavailable,
 )
 from app.schemas.chat import ChatRequest, ChatResponse
+from app.observability import log_event, reset_request_id, set_request_id
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +36,48 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["Content-Type", "Authorization"],
+    expose_headers=["X-Request-ID"],
 )
+
+
+@app.middleware("http")
+async def request_observability_middleware(request, call_next):
+    """Correlate each HTTP request and record its total server-side duration."""
+    supplied_id = request.headers.get("X-Request-ID", "")
+    try:
+        request_id = str(uuid.UUID(supplied_id))
+    except (ValueError, AttributeError):
+        request_id = str(uuid.uuid4())
+
+    token = set_request_id(request_id)
+    started = time.perf_counter()
+    status_code = 500
+
+    try:
+        response = await call_next(request)
+        status_code = response.status_code
+        response.headers["X-Request-ID"] = request_id
+        return response
+    except Exception as exc:
+        log_event(
+            "http.request.exception",
+            level=logging.ERROR,
+            method=request.method,
+            path=request.url.path,
+            status_code=status_code,
+            duration_ms=round((time.perf_counter() - started) * 1000, 2),
+            error_type=type(exc).__name__,
+        )
+        raise
+    finally:
+        log_event(
+            "http.request.completed",
+            method=request.method,
+            path=request.url.path,
+            status_code=status_code,
+            duration_ms=round((time.perf_counter() - started) * 1000, 2),
+        )
+        reset_request_id(token)
 
 
 @app.get("/")

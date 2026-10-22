@@ -69,6 +69,12 @@ flowchart TD
 
 The AI service should access store data through backend APIs rather than querying PostgreSQL directly. Authorization decisions—especially order ownership—must be enforced by the backend, not by the model or prompt.
 
+## AI request observability
+
+The AI service emits structured JSON log events for HTTP request duration, agent-turn duration, individual LLM calls, individual tool executions, and call/round counts. A validated or generated request ID is returned in the `X-Request-ID` response header so events can be correlated in hosting logs. Token counts are recorded when the provider supplies them.
+
+Events deliberately omit prompt text, tool arguments, cookies, and customer payloads. These logs provide raw measurements for a latency baseline; percentile dashboards and provider cost estimates are not included yet.
+
 ## Retrieval and evaluation
 
 The RAG pipeline combines semantic retrieval and cross-encoder reranking for store-policy knowledge. The project's recorded 20-query evaluation achieved:

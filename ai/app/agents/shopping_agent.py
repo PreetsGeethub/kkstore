@@ -1,6 +1,7 @@
 
 import json
 import logging
+import time
 from functools import partial
 from app.llm.quota import (
     LLMQuotaExceeded,
@@ -11,6 +12,7 @@ from pydantic import ValidationError
 from app.llm.ollama import get_ollama_tools
 from app.llm.client import ask_llm
 from app.conversation import get_conversation, save_conversation
+from app.observability import log_event
 
 from app.tools.orders import get_my_orders
 from app.tools.products import search_products, get_product_details
@@ -38,6 +40,46 @@ def _tool_error(error_code: str, message: str) -> dict:
         error_code=error_code,
         message=message,
     ).model_dump()
+
+
+def _timed_llm_call(messages, tools, stats: dict):
+    """Call the model and record latency and token usage without logging prompts."""
+    stats["llm_calls"] += 1
+    started = time.perf_counter()
+    try:
+        response = ask_llm(messages, tools=tools)
+    except Exception as exc:
+        log_event(
+            "agent.llm.completed",
+            level=logging.ERROR,
+            call_number=stats["llm_calls"],
+            duration_ms=round((time.perf_counter() - started) * 1000, 2),
+            status="error",
+            error_type=type(exc).__name__,
+        )
+        raise
+
+    usage = getattr(response, "usage", None)
+    input_tokens = getattr(usage, "prompt_tokens", None)
+    output_tokens = getattr(usage, "completion_tokens", None)
+    if input_tokens is None:
+        input_tokens = getattr(response, "prompt_eval_count", None)
+    if output_tokens is None:
+        output_tokens = getattr(response, "eval_count", None)
+    total_tokens = getattr(usage, "total_tokens", None)
+    if total_tokens is None and input_tokens is not None and output_tokens is not None:
+        total_tokens = input_tokens + output_tokens
+
+    log_event(
+        "agent.llm.completed",
+        call_number=stats["llm_calls"],
+        duration_ms=round((time.perf_counter() - started) * 1000, 2),
+        status="ok",
+        input_tokens=input_tokens,
+        output_tokens=output_tokens,
+        total_tokens=total_tokens,
+    )
+    return response
 
 
 def _parse_tool_arguments(arguments) -> dict:
@@ -82,11 +124,12 @@ def _add_products(product_results: list, result) -> None:
 
         product_results.append(product)
 
-async def run_shopping_agent(
+async def _run_shopping_agent(
     user_prompt: str,
     access_token: str | None,
     conversation_id: str,
     owner_id: str,
+    stats: dict,
 ):
     """Run one shopping-assistant turn with bounded LLM calls."""
 
@@ -162,9 +205,10 @@ async def run_shopping_agent(
     tool_round = 0
 
     # First LLM request.
-    response = ask_llm(
+    response = _timed_llm_call(
         messages,
         tools=get_ollama_tools(),
+        stats=stats,
     )
     llm_calls += 1
 
@@ -210,6 +254,7 @@ async def run_shopping_agent(
             }
 
         tool_round += 1
+        stats["tool_rounds"] = tool_round
 
         # Preserve the assistant's tool requests in the conversation.
         messages.append({
@@ -230,6 +275,9 @@ async def run_shopping_agent(
         for tool_call in tool_calls:
             tool_name = tool_call.function.name
             tool = tools.get(tool_name)
+            tool_started = time.perf_counter()
+            tool_status = "ok"
+            stats["tool_calls"] += 1
 
             try:
                 arguments = _parse_tool_arguments(
@@ -280,6 +328,7 @@ async def run_shopping_agent(
 
                             _add_products(product_results, semantic_products)
             except ValidationError:
+                tool_status = "invalid_arguments"
                 logger.warning(
                     "Invalid arguments for tool %s",
                     tool_name,
@@ -291,6 +340,7 @@ async def run_shopping_agent(
                 )
 
             except (ValueError, json.JSONDecodeError):
+                tool_status = "invalid_arguments"
                 logger.warning(
                     "Malformed arguments for tool %s",
                     tool_name,
@@ -301,9 +351,11 @@ async def run_shopping_agent(
                     f"The arguments provided to {tool_name} were invalid.",
                 )
             except (LLMQuotaExceeded, LLMQuotaUnavailable):
+                tool_status = "quota_error"
                 raise
 
             except Exception:
+                tool_status = "error"
                 logger.exception(
                     "Tool execution failed: %s",
                     tool_name,
@@ -312,6 +364,14 @@ async def run_shopping_agent(
                     "TOOL_EXECUTION_FAILED",
                     f"The {tool_name} tool failed. Try another approach "
                     "if appropriate.",
+                )
+            finally:
+                log_event(
+                    "agent.tool.completed",
+                    level=logging.ERROR if tool_status in {"error", "quota_error"} else logging.INFO,
+                    tool=tool_name,
+                    duration_ms=round((time.perf_counter() - tool_started) * 1000, 2),
+                    status=tool_status,
                 )
 
             messages.append({
@@ -347,8 +407,49 @@ async def run_shopping_agent(
             }
 
         # Request the next model response.
-        response = ask_llm(
+        response = _timed_llm_call(
             messages,
             tools=get_ollama_tools(),
+            stats=stats,
         )
         llm_calls += 1
+
+
+
+async def run_shopping_agent(
+    user_prompt: str,
+    access_token: str | None,
+    conversation_id: str,
+    owner_id: str,
+):
+    """Run one agent turn and emit a summary of its latency and complexity."""
+    stats = {
+        "llm_calls": 0,
+        "tool_calls": 0,
+        "tool_rounds": 0,
+    }
+    started = time.perf_counter()
+
+    try:
+        return await _run_shopping_agent(
+            user_prompt=user_prompt,
+            access_token=access_token,
+            conversation_id=conversation_id,
+            owner_id=owner_id,
+            stats=stats,
+        )
+    except Exception as exc:
+        log_event(
+            "agent.turn.failed",
+            level=logging.ERROR,
+            duration_ms=round((time.perf_counter() - started) * 1000, 2),
+            error_type=type(exc).__name__,
+            **stats,
+        )
+        raise
+    finally:
+        log_event(
+            "agent.turn.completed",
+            duration_ms=round((time.perf_counter() - started) * 1000, 2),
+            **stats,
+        )

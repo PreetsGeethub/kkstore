@@ -43,15 +43,42 @@ def _tool_error(error_code: str, message: str) -> dict:
 
 
 def _timed_llm_call(messages, tools, stats: dict):
-    """Call the model and record duration without logging prompt contents."""
+    """Call the model and record latency and token usage without logging prompts."""
     stats["llm_calls"] += 1
     started = time.perf_counter()
     try:
         response = ask_llm(messages, tools=tools)
     except Exception as exc:
-        log_event("agent.llm.completed", level=logging.ERROR, call_number=stats["llm_calls"], duration_ms=round((time.perf_counter() - started) * 1000, 2), status="error", error_type=type(exc).__name__)
+        log_event(
+            "agent.llm.completed",
+            level=logging.ERROR,
+            call_number=stats["llm_calls"],
+            duration_ms=round((time.perf_counter() - started) * 1000, 2),
+            status="error",
+            error_type=type(exc).__name__,
+        )
         raise
-    log_event("agent.llm.completed", call_number=stats["llm_calls"], duration_ms=round((time.perf_counter() - started) * 1000, 2), status="ok")
+
+    usage = getattr(response, "usage", None)
+    input_tokens = getattr(usage, "prompt_tokens", None)
+    output_tokens = getattr(usage, "completion_tokens", None)
+    if input_tokens is None:
+        input_tokens = getattr(response, "prompt_eval_count", None)
+    if output_tokens is None:
+        output_tokens = getattr(response, "eval_count", None)
+    total_tokens = getattr(usage, "total_tokens", None)
+    if total_tokens is None and input_tokens is not None and output_tokens is not None:
+        total_tokens = input_tokens + output_tokens
+
+    log_event(
+        "agent.llm.completed",
+        call_number=stats["llm_calls"],
+        duration_ms=round((time.perf_counter() - started) * 1000, 2),
+        status="ok",
+        input_tokens=input_tokens,
+        output_tokens=output_tokens,
+        total_tokens=total_tokens,
+    )
     return response
 
 

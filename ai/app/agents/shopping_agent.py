@@ -248,6 +248,9 @@ async def _run_shopping_agent(
         for tool_call in tool_calls:
             tool_name = tool_call.function.name
             tool = tools.get(tool_name)
+            tool_started = time.perf_counter()
+            tool_status = "ok"
+            stats["tool_calls"] += 1
 
             try:
                 arguments = _parse_tool_arguments(
@@ -298,6 +301,7 @@ async def _run_shopping_agent(
 
                             _add_products(product_results, semantic_products)
             except ValidationError:
+                tool_status = "invalid_arguments"
                 logger.warning(
                     "Invalid arguments for tool %s",
                     tool_name,
@@ -309,6 +313,7 @@ async def _run_shopping_agent(
                 )
 
             except (ValueError, json.JSONDecodeError):
+                tool_status = "invalid_arguments"
                 logger.warning(
                     "Malformed arguments for tool %s",
                     tool_name,
@@ -319,9 +324,11 @@ async def _run_shopping_agent(
                     f"The arguments provided to {tool_name} were invalid.",
                 )
             except (LLMQuotaExceeded, LLMQuotaUnavailable):
+                tool_status = "quota_error"
                 raise
 
             except Exception:
+                tool_status = "error"
                 logger.exception(
                     "Tool execution failed: %s",
                     tool_name,
@@ -330,6 +337,14 @@ async def _run_shopping_agent(
                     "TOOL_EXECUTION_FAILED",
                     f"The {tool_name} tool failed. Try another approach "
                     "if appropriate.",
+                )
+            finally:
+                log_event(
+                    "agent.tool.completed",
+                    level=logging.ERROR if tool_status in {"error", "quota_error"} else logging.INFO,
+                    tool=tool_name,
+                    duration_ms=round((time.perf_counter() - tool_started) * 1000, 2),
+                    status=tool_status,
                 )
 
             messages.append({

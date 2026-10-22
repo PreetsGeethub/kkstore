@@ -147,7 +147,8 @@ def normalize_response(response):
         message=SimpleNamespace(
             content=message.content or "",
             tool_calls=normalized_calls,
-        )
+        ),
+        usage=getattr(response, "usage", None),
     )
 
 
